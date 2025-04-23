@@ -14,6 +14,7 @@ import (
 func CreateMagang(c *gin.Context) {
 	id := uuid.New().String()
 
+	// Ambil data form
 	nama := c.PostForm("nama")
 	keperluan := c.PostForm("keperluan")
 	instansi := c.PostForm("instansi")
@@ -23,14 +24,14 @@ func CreateMagang(c *gin.Context) {
 	end_date := c.PostForm("end_date")
 	bidang_id := c.PostForm("bidang_magang_id")
 
-	// handle file
+	// Handle file upload
 	file, err := c.FormFile("dokumen")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File wajib diunggah"})
 		return
 	}
 
-	// validasi ekstensi file
+	// Validasi ekstensi file
 	ext := filepath.Ext(file.Filename)
 	allowedExt := map[string]bool{".zip": true, ".docx": true, ".pdf": true}
 	if !allowedExt[ext] {
@@ -38,39 +39,71 @@ func CreateMagang(c *gin.Context) {
 		return
 	}
 
-	// simpan file
+	// Simpan file
 	filename := fmt.Sprintf("%s%s", uuid.New().String(), ext)
-	filepath := filepath.Join("uploads", filename)
-	if err := c.SaveUploadedFile(file, filepath); err != nil {
+	filePath := filepath.Join("uploads", filename)
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan file"})
 		return
 	}
 
-	// simpan data ke DB
+	// Simpan data pendaftaran dengan status "Pending"
 	_, err = config.DB.Exec(`
 		INSERT INTO magangs (id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, dokumen, bidang_magang_id, status_magang, created_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`, id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, filename, bidang_id, "Pending", time.Now())
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan data magang"})
 		return
 	}
 
-	// Kurangi kuota bidang magang jika status sudah aktif
-	_, err = config.DB.Exec(`
-		UPDATE bidang_magangs 
-		SET kuota = kuota - 1 
-		WHERE id = ? AND kuota > 0
-	`, bidang_id)
-
-	if err != nil {
+	// **Kuota hanya akan berkurang jika status magang sudah "Aktif"**
+	if err := UpdateKuotaIfActive(bidang_id, "Pending"); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal update kuota bidang magang"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Pendaftaran berhasil!", "id": id})
 }
+
+// Fungsi untuk mengupdate kuota hanya jika status magang "Aktif"
+func UpdateKuotaIfActive(bidangID string, status string) error {
+	if status == "Aktif" {
+		_, err := config.DB.Exec(`
+            UPDATE bidang_magangs
+            SET kuota = kuota - 1
+            WHERE id = ? AND kuota > 0
+        `, bidangID)
+		return err
+	}
+	return nil
+}
+
+// Fungsi untuk memperbarui kuota berdasarkan status magang
+// func UpdateKuotaIfActive(bidangID string, status string, startDate string, endDate string) error {
+// 	// Pastikan status sudah "Aktif" baru kurangi kuota
+// 	if status == "Aktif" {
+// 		_, err := config.DB.Exec(`
+// 			UPDATE bidang_magangs
+// 			SET kuota = kuota - 1
+// 			WHERE id = ? AND kuota > 0
+// 		`, bidangID)
+// 		return err
+// 	}
+
+// 	// Jika statusnya "Selesai" atau "Ditolak", tambahkan kuota kembali
+// 	if status == "Selesai" || status == "Ditolak" {
+// 		_, err := config.DB.Exec(`
+// 			UPDATE bidang_magangs
+// 			SET kuota = kuota + 1
+// 			WHERE id = ? AND kuota < max_kuota
+// 		`, bidangID)
+// 		return err
+// 	}
+
+// 	// Tidak ada perubahan pada kuota jika status tidak berubah
+// 	return nil
+// }
 
 func GetAllMagangs(c *gin.Context) {
 	rows, err := config.DB.Query("SELECT * FROM magangs ORDER BY created_at DESC")
@@ -126,7 +159,9 @@ func UpdateMagangStatus(c *gin.Context) {
 
 	newStatus := json.Status
 	allowedStatus := map[string]bool{
-		"Aktif": true, "Selesai": true, "Ditolak": true,
+		"Aktif":   true,
+		"Selesai": true,
+		"Ditolak": true,
 	}
 	if !allowedStatus[newStatus] {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Status tidak valid"})
@@ -148,16 +183,17 @@ func UpdateMagangStatus(c *gin.Context) {
 		return
 	}
 
-	// Atur kuota berdasarkan perubahan status
-	if oldStatus != "Aktif" && newStatus == "Aktif" {
-		// Kurangi kuota
+	// Jika status magang berubah menjadi "Aktif", kurangi kuota
+	if newStatus == "Aktif" && oldStatus != "Aktif" {
 		_, err = config.DB.Exec("UPDATE bidang_magangs SET kuota = kuota - 1 WHERE id = ? AND kuota > 0", bidangID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengurangi kuota"})
 			return
 		}
-	} else if oldStatus == "Aktif" && (newStatus == "Selesai" || newStatus == "Ditolak") {
-		// Tambah kuota
+	}
+
+	// Jika status magang berubah menjadi "Selesai" atau "Ditolak", tambahkan kuota
+	if (newStatus == "Selesai" || newStatus == "Ditolak") && oldStatus == "Aktif" {
 		_, err = config.DB.Exec("UPDATE bidang_magangs SET kuota = kuota + 1 WHERE id = ?", bidangID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menambahkan kuota"})
@@ -166,6 +202,34 @@ func UpdateMagangStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Status berhasil diubah"})
+}
+
+func DeleteMagang(c *gin.Context) {
+	id := c.Param("id")
+
+	// Ambil bidang magang id dan status magang
+	var bidangID string
+	err := config.DB.QueryRow("SELECT bidang_magang_id FROM magangs WHERE id = ?", id).Scan(&bidangID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal ambil data magang"})
+		return
+	}
+
+	// Hapus data magang
+	_, err = config.DB.Exec("DELETE FROM magangs WHERE id = ?", id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus magang"})
+		return
+	}
+
+	// Tambahkan kuota kembali jika magang dihapus
+	_, err = config.DB.Exec("UPDATE bidang_magangs SET kuota = kuota + 1 WHERE id = ?", bidangID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menambahkan kuota setelah penghapusan magang"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Magang berhasil dihapus dan kuota ditambahkan"})
 }
 
 // controllers/magang.go

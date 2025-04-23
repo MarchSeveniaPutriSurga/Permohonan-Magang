@@ -1,5 +1,7 @@
 import logo from "../assets/images/logo.png";
 
+import "../assets/css/App.css";
+
 const Navbar = () => {
   return (
     <nav className="bg-stone-500 text-white p-4 shadow-md">
