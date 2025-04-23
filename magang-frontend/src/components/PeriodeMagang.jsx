@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import "../assets/css/App.css";
+
 const PeriodeMagang = ({ onDateChange }) => {
   const [dates, setDates] = useState({
     start_date: "",

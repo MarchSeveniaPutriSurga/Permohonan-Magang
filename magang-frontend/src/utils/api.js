@@ -33,6 +33,19 @@ export const checkKuota = async (startDate, endDate) => {
   }
 };
 
+// export const checkKuota = async (startDate, endDate) => {
+//   try {
+//     const response = await fetch(
+//       `http://localhost:8080/api/magang/kuota?start_date=${startDate}&end_date=${endDate}`
+//     );
+//     const data = await response.json();
+//     return data; // Data ini berisi kuota per bidang
+//   } catch (error) {
+//     console.error("Error checking quota:", error);
+//     throw error;
+//   }
+// };
+
 export const createMagang = async (data) => {
   const formData = new FormData();
   Object.keys(data).forEach((key) => {
