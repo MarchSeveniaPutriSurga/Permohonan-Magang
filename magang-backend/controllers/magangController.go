@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"magang-backend/config"
+	"magang-backend/models"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -11,6 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// CreateMagang
 func CreateMagang(c *gin.Context) {
 	id := uuid.New().String()
 
@@ -48,103 +51,31 @@ func CreateMagang(c *gin.Context) {
 	}
 
 	// Simpan data pendaftaran dengan status "Pending"
-	_, err = config.DB.Exec(`
-		INSERT INTO magangs (id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, dokumen, bidang_magang_id, status_magang, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`, id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, filename, bidang_id, "Pending", time.Now())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan data magang"})
-		return
-	}
+	result := config.DB.Exec(
+		"INSERT INTO magangs (id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, dokumen, bidang_magang_id, status_magang, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, filename, bidang_id, "Pending", time.Now())
 
-	// **Kuota hanya akan berkurang jika status magang sudah "Aktif"**
-	if err := UpdateKuotaIfActive(bidang_id, "Pending"); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal update kuota bidang magang"})
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan data magang"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Pendaftaran berhasil!", "id": id})
 }
 
-// Fungsi untuk mengupdate kuota hanya jika status magang "Aktif"
-func UpdateKuotaIfActive(bidangID string, status string) error {
-	if status == "Aktif" {
-		_, err := config.DB.Exec(`
-            UPDATE bidang_magangs
-            SET kuota = kuota - 1
-            WHERE id = ? AND kuota > 0
-        `, bidangID)
-		return err
-	}
-	return nil
-}
-
-// Fungsi untuk memperbarui kuota berdasarkan status magang
-// func UpdateKuotaIfActive(bidangID string, status string, startDate string, endDate string) error {
-// 	// Pastikan status sudah "Aktif" baru kurangi kuota
-// 	if status == "Aktif" {
-// 		_, err := config.DB.Exec(`
-// 			UPDATE bidang_magangs
-// 			SET kuota = kuota - 1
-// 			WHERE id = ? AND kuota > 0
-// 		`, bidangID)
-// 		return err
-// 	}
-
-// 	// Jika statusnya "Selesai" atau "Ditolak", tambahkan kuota kembali
-// 	if status == "Selesai" || status == "Ditolak" {
-// 		_, err := config.DB.Exec(`
-// 			UPDATE bidang_magangs
-// 			SET kuota = kuota + 1
-// 			WHERE id = ? AND kuota < max_kuota
-// 		`, bidangID)
-// 		return err
-// 	}
-
-// 	// Tidak ada perubahan pada kuota jika status tidak berubah
-// 	return nil
-// }
-
+// mendapatkan semua data magang
 func GetAllMagangs(c *gin.Context) {
-	rows, err := config.DB.Query("SELECT * FROM magangs ORDER BY created_at DESC")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal ambil data"})
+	var magangs []models.Magang
+	result := config.DB.Find(&magangs)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
-	}
-	defer rows.Close()
-
-	var magangs []map[string]interface{}
-	cols, _ := rows.Columns()
-
-	for rows.Next() {
-		columns := make([]interface{}, len(cols))
-		columnPointers := make([]interface{}, len(cols))
-
-		for i := range columns {
-			columnPointers[i] = &columns[i]
-		}
-
-		if err := rows.Scan(columnPointers...); err != nil {
-			continue
-		}
-
-		magang := make(map[string]interface{})
-		for i, colName := range cols {
-			val := columnPointers[i].(*interface{})
-			switch v := (*val).(type) {
-			case []byte:
-				magang[colName] = string(v)
-			default:
-				magang[colName] = v
-			}
-		}
-
-		magangs = append(magangs, magang)
 	}
 
 	c.JSON(http.StatusOK, magangs)
 }
 
+// memperbarui status magang
 func UpdateMagangStatus(c *gin.Context) {
 	id := c.Param("id")
 
@@ -157,152 +88,182 @@ func UpdateMagangStatus(c *gin.Context) {
 		return
 	}
 
-	newStatus := json.Status
-	allowedStatus := map[string]bool{
-		"Aktif":   true,
-		"Selesai": true,
-		"Ditolak": true,
-	}
-	if !allowedStatus[newStatus] {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Status tidak valid"})
+	// ambil status magang saat ini dari database
+	var magang models.Magang
+	result := config.DB.First(&magang, "id = ?", id)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Magang tidak ditemukan"})
 		return
 	}
 
-	// Ambil status dan bidang_magang_id saat ini
-	var oldStatus, bidangID string
-	err := config.DB.QueryRow("SELECT status_magang, bidang_magang_id FROM magangs WHERE id = ?", id).Scan(&oldStatus, &bidangID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal ambil data magang"})
+	// update status magang
+	result = config.DB.Exec("UPDATE magangs SET status_magang = ? WHERE id = ?", json.Status, id)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
 
-	// Update status magang
-	_, err = config.DB.Exec("UPDATE magangs SET status_magang = ? WHERE id = ?", newStatus, id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal update status"})
-		return
-	}
-
-	// Jika status magang berubah menjadi "Aktif", kurangi kuota
-	if newStatus == "Aktif" && oldStatus != "Aktif" {
-		_, err = config.DB.Exec("UPDATE bidang_magangs SET kuota = kuota - 1 WHERE id = ? AND kuota > 0", bidangID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengurangi kuota"})
-			return
-		}
-	}
-
-	// Jika status magang berubah menjadi "Selesai" atau "Ditolak", tambahkan kuota
-	if (newStatus == "Selesai" || newStatus == "Ditolak") && oldStatus == "Aktif" {
-		_, err = config.DB.Exec("UPDATE bidang_magangs SET kuota = kuota + 1 WHERE id = ?", bidangID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menambahkan kuota"})
-			return
-		}
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Status berhasil diubah"})
+	c.JSON(http.StatusOK, gin.H{"message": "Status magang updated successfully"})
 }
 
-func DeleteMagang(c *gin.Context) {
-	id := c.Param("id")
-
-	// Ambil bidang magang id dan status magang
-	var bidangID string
-	err := config.DB.QueryRow("SELECT bidang_magang_id FROM magangs WHERE id = ?", id).Scan(&bidangID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal ambil data magang"})
-		return
-	}
-
-	// Hapus data magang
-	_, err = config.DB.Exec("DELETE FROM magangs WHERE id = ?", id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus magang"})
-		return
-	}
-
-	// Tambahkan kuota kembali jika magang dihapus
-	_, err = config.DB.Exec("UPDATE bidang_magangs SET kuota = kuota + 1 WHERE id = ?", bidangID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menambahkan kuota setelah penghapusan magang"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Magang berhasil dihapus dan kuota ditambahkan"})
-}
-
-// controllers/magang.go
+// menghitung jumlah magang aktif dalam periode yang dipilih
 func GetUsedQuota(c *gin.Context) {
-	// 1. Ambil parameter
 	startDate := c.Query("start_date")
 	endDate := c.Query("end_date")
 
-	// 2. Validasi parameter
-	if startDate == "" || endDate == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "start_date dan end_date wajib diisi",
-		})
+	startTime, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start_date format"})
 		return
 	}
 
-	// 3. Validasi format tanggal
-	if _, err := time.Parse("2006-01-02", startDate); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "format start_date harus YYYY-MM-DD",
-		})
+	endTime, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end_date format"})
 		return
 	}
 
-	if _, err := time.Parse("2006-01-02", endDate); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "format end_date harus YYYY-MM-DD",
-		})
-		return
-	}
-
-	// 4. Query ke database
+	// Query untuk menghitung kuota yang digunakan berdasarkan status aktif dan periode tumpang tindih
 	query := `
         SELECT bidang_magang_id, COUNT(*) as count 
         FROM magangs 
         WHERE status_magang = 'Aktif'
         AND (
-            (start_date BETWEEN ? AND ?) OR 
-            (end_date BETWEEN ? AND ?) OR 
+            -- Periode magang sudah dimulai sebelum atau saat tanggal mulai pencarian
             (start_date <= ? AND end_date >= ?)
+            OR (start_date <= ? AND end_date >= ?)
+            OR (start_date >= ? AND end_date <= ?)
         )
         GROUP BY bidang_magang_id
     `
 
-	rows, err := config.DB.Query(query,
-		startDate, endDate,
-		startDate, endDate,
-		startDate, endDate,
+	var results []struct {
+		BidangID string `json:"bidang_magang_id"`
+		Count    int    `json:"count"`
+	}
+
+	err = config.DB.Raw(query, endTime, startTime, startTime, endTime, startTime, endTime).Scan(&results).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal query database"})
+		return
+	}
+
+	// Membuat map untuk hasil
+	resultMap := make(map[string]int)
+	for _, r := range results {
+		resultMap[r.BidangID] = r.Count
+	}
+
+	// Ambil semua bidang magang untuk mendapatkan informasi kuota (kuota tetap statis)
+	var bidangs []models.BidangMagang
+	if err := config.DB.Find(&bidangs).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data bidang"})
+		return
+	}
+
+	// Membuat response yang mencakup kuota tersedia dan kuota terpakai
+	response := make(map[string]map[string]interface{})
+	for _, bidang := range bidangs {
+		used := resultMap[bidang.ID]
+		response[bidang.ID] = map[string]interface{}{
+			"count": used,
+			"max":   bidang.Kuota,
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func MagangPeriode(c *gin.Context) {
+	var (
+		result          gin.H
+		bidangWithCount []models.BidangMagangWithCount
 	)
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Gagal query database: " + err.Error(),
+	// Mengambil nilai start_date dan end_date dari query params
+	startDateStr := c.Query("start_date")
+	endDateStr := c.Query("end_date")
+
+	log.Println("Request Parameters - start_date:", startDateStr, "end_date:", endDateStr)
+
+	// validasi bahwa start_date dan end_date ada
+	if startDateStr == "" || endDateStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "400",
+			"message": "Parameter start_date dan end_date diperlukan",
 		})
 		return
 	}
-	defer rows.Close()
 
-	// 5. Proses hasil query
-	results := make(map[string]int)
-	for rows.Next() {
-		var bidangID string
-		var count int
+	// Debug: Query database secara langsung untuk verifikasi
+	var debugCount int64
+	debugQuery := `
+		SELECT COUNT(*) 
+		FROM magangs 
+		WHERE status_magang = 'Aktif' 
+		AND start_date >= ? 
+		AND end_date <= ? 
+		AND bidang_magang_id = '1ae5a49d-0e63-45f0-b103-c856661b97d0'
+	`
+	config.DB.Raw(debugQuery, startDateStr, endDateStr).Count(&debugCount)
+	log.Println("Debug direct query count:", debugCount)
 
-		if err := rows.Scan(&bidangID, &count); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Gagal baca hasil query: " + err.Error(),
-			})
-			return
+	// verifikasi format tanggal yang tersimpan di database
+	var dateCheck struct {
+		ID        string    `json:"id"`
+		StartDate time.Time `json:"start_date"`
+		EndDate   time.Time `json:"end_date"`
+		Status    string    `json:"status_magang"`
+	}
+	config.DB.Raw("SELECT id, start_date, end_date, status_magang FROM magangs WHERE bidang_magang_id = '1ae5a49d-0e63-45f0-b103-c856661b97d0' LIMIT 1").Scan(&dateCheck)
+	log.Println("Sample date from DB:", dateCheck)
+
+	// raw SQL dengan parameter string langsung
+	query := `
+		SELECT 
+			b.id, 
+			b.nama AS nama_bidang, 
+			b.kuota, 
+			COALESCE(m.count, 0) AS jumlah_magang
+		FROM 
+			bidang_magangs b
+		LEFT JOIN (
+			SELECT 
+				bidang_magang_id, 
+				COUNT(*) AS count
+			FROM 
+				magangs
+			WHERE 
+				status_magang = 'Aktif' 
+				AND start_date >= ?
+				AND end_date <= ?
+			GROUP BY 
+				bidang_magang_id
+		) m ON b.id = m.bidang_magang_id
+	`
+
+	// query dengan parameter string langsung
+	err := config.DB.Raw(query, startDateStr, endDateStr).Scan(&bidangWithCount).Error
+
+	// cek jika ada error pada query
+	if err != nil {
+		log.Println("Error DB:", err.Error())
+		result = gin.H{
+			"status":  "400",
+			"message": "Gagal mengambil data magang",
+			"data":    "",
 		}
-		results[bidangID] = count
+		c.JSON(http.StatusInternalServerError, result)
+		return
 	}
 
-	// 6. Kirim response
-	c.JSON(http.StatusOK, results)
+	log.Println("Data Bidang Magang:", bidangWithCount)
+
+	// mengembalikan data
+	result = gin.H{
+		"status":  "200",
+		"message": "Data magang per bidang berhasil diambil",
+		"data":    bidangWithCount,
+	}
+	c.JSON(http.StatusOK, result)
 }

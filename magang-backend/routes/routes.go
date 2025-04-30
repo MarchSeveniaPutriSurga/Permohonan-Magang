@@ -17,5 +17,6 @@ func SetupRoutes(router *gin.Engine) {
 		api.GET("/magang", controllers.GetAllMagangs)
 		api.PUT("/magang/:id/status", controllers.UpdateMagangStatus)
 		api.GET("/magang/kuota", controllers.GetUsedQuota)
+		api.GET("/magang/periode", controllers.MagangPeriode)
 	}
 }

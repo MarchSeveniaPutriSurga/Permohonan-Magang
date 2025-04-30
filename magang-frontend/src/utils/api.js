@@ -8,43 +8,21 @@ export const getPublishedBidangs = async () => {
   return await response.json();
 };
 
-export const checkKuota = async (startDate, endDate) => {
+export const getMagangPeriode = async (startDate, endDate) => {
   try {
     const response = await fetch(
-      `${API_URL}/magang/kuota?start_date=${startDate}&end_date=${endDate}`
+      `${API_URL}/magang/periode?start_date=${startDate}&end_date=${endDate}`
     );
 
-    if (!response.ok) throw new Error("Gagal memeriksa kuota");
+    if (!response.ok) throw new Error("Gagal memuat data bidang magang");
 
-    const usedQuotas = await response.json();
-
-    // Pastikan selalu mengembalikan data kuota lengkap
-    const allBidangs = await getPublishedBidangs();
-    return allBidangs.reduce((acc, bidang) => {
-      acc[bidang.id] = {
-        current: usedQuotas[bidang.id]?.count || 0,
-        max: parseInt(bidang.kuota),
-      };
-      return acc;
-    }, {});
+    const result = await response.json();
+    return result.data || [];
   } catch (error) {
-    console.error("Error checking quota:", error);
+    console.error("Error fetching bidang data by period:", error);
     throw error;
   }
 };
-
-// export const checkKuota = async (startDate, endDate) => {
-//   try {
-//     const response = await fetch(
-//       `http://localhost:8080/api/magang/kuota?start_date=${startDate}&end_date=${endDate}`
-//     );
-//     const data = await response.json();
-//     return data; // Data ini berisi kuota per bidang
-//   } catch (error) {
-//     console.error("Error checking quota:", error);
-//     throw error;
-//   }
-// };
 
 export const createMagang = async (data) => {
   const formData = new FormData();

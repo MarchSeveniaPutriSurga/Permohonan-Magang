@@ -2,12 +2,18 @@ import { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import PeriodeMagang from "../../components/PeriodeMagang";
 import BidangCard from "../../components/BidangCard";
-import { getPublishedBidangs, createMagang, checkKuota } from "../../utils/api";
+import {
+  getPublishedBidangs,
+  createMagang,
+  getMagangPeriode,
+} from "../../utils/api";
 import "../../assets/css/App.css";
 
 const PendaftaranMagang = () => {
   const [bidangs, setBidangs] = useState([]);
   const [selectedBidang, setSelectedBidang] = useState(null);
+  const [selectedBidangDescription, setSelectedBidangDescription] =
+    useState(null);
   const [periode, setPeriode] = useState({ start_date: "", end_date: "" });
   const [kuotaInfo, setKuotaInfo] = useState({});
   const [formData, setFormData] = useState({
@@ -22,7 +28,7 @@ const PendaftaranMagang = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Fungsi untuk cek apakah form sudah lengkap
+  // cek apakah form sudah lengkap
   const isFormComplete = () => {
     return (
       periode.start_date &&
@@ -40,7 +46,7 @@ const PendaftaranMagang = () => {
 
   // Cek kuota per bidang
   const isBidangFull = (bidangId) => {
-    return kuotaInfo[bidangId]?.current >= kuotaInfo[bidangId]?.max;
+    const kuota = kuotaInfo[bidangId];
   };
 
   // Ambil data bidang dari API
@@ -56,13 +62,13 @@ const PendaftaranMagang = () => {
     fetchBidangs();
   }, []);
 
-  // Fungsi untuk memperbarui kuota setelah perubahan status magang
+  // memperbarui kuota setelah perubahan status magang
   const updateKuotaAfterStatusChange = async (bidangId) => {
     try {
-      // Panggil API untuk mendapatkan kuota yang terbaru
-      const kuotaData = await checkKuota(periode.start_date, periode.end_date);
-
-      // Perbarui state kuota dengan data terbaru
+      const kuotaData = await getMagangPeriode(
+        periode.start_date,
+        periode.end_date
+      );
       setKuotaInfo((prevKuota) => ({
         ...prevKuota,
         [bidangId]: kuotaData[bidangId] || { current: 0, max: 0 },
@@ -75,69 +81,43 @@ const PendaftaranMagang = () => {
   // Handle perubahan periode
   const handlePeriodeChange = async (dates) => {
     setPeriode(dates);
+
+    if (!dates.start_date || !dates.end_date) return;
+
     try {
-      const kuotaData = await checkKuota(dates.start_date, dates.end_date);
+      setLoading(true);
 
-      // Pastikan semua bidang memiliki data kuota
-      const completeKuotaInfo = bidangs.reduce((acc, bidang) => {
-        // Jika end_date sudah lewat, tambahkan kuota untuk bidang yang kosong
-        if (new Date(dates.end_date) > new Date()) {
-          acc[bidang.id] = kuotaData[bidang.id] || {
-            current: 0,
-            max: parseInt(bidang.kuota),
-          };
-        } else {
-          acc[bidang.id] = kuotaData[bidang.id] || {
-            current: 0,
-            max: parseInt(bidang.kuota) + 1, // Tambahkan kuota jika sudah lewat
-          };
-        }
-        return acc;
-      }, {});
+      // Panggil fungsi getMagangPeriode yang sudah ada di api.js
+      const result = await getMagangPeriode(dates.start_date, dates.end_date);
 
-      setKuotaInfo(completeKuotaInfo);
-      setError("");
+      if (result.status === "200" && result.data) {
+        const completeKuotaInfo = result.data.reduce((acc, bidang) => {
+          acc[bidang.id] = {
+            current: bidang.jumlah_magang || 0, // Jumlah magang aktif
+            max: parseInt(bidang.kuota) || 0, // Kuota maksimal
+          };
+          return acc;
+        }, {});
+
+        setKuotaInfo(completeKuotaInfo); // Update kuota di state
+        setError(""); // Reset error
+      }
     } catch (err) {
-      setError("Gagal memeriksa kuota: " + err.message);
-      setKuotaInfo({});
+      console.error("Error:", err);
+      setError("Gagal memeriksa kuota bidang magang");
+    } finally {
+      setLoading(false);
     }
   };
-
-  // const handlePeriodeChange = async (dates) => {
-  //   setPeriode(dates);
-
-  //   try {
-  //     const kuotaData = await checkKuota(dates.start_date, dates.end_date);
-
-  //     // Pastikan semua bidang memiliki data kuota
-  //     const completeKuotaInfo = bidangs.reduce((acc, bidang) => {
-  //       // Jika end_date sudah lewat, tambahkan kuota untuk bidang yang kosong
-  //       if (new Date(dates.end_date) > new Date()) {
-  //         acc[bidang.id] = kuotaData[bidang.id] || {
-  //           current: 0,
-  //           max: parseInt(bidang.kuota),
-  //         };
-  //       } else {
-  //         acc[bidang.id] = kuotaData[bidang.id] || {
-  //           current: 0,
-  //           max: parseInt(bidang.kuota) + 1, // Tambahkan kuota jika sudah lewat
-  //         };
-  //       }
-  //       return acc;
-  //     }, {});
-
-  //     setKuotaInfo(completeKuotaInfo);
-  //     setError("");
-  //   } catch (err) {
-  //     setError("Gagal memeriksa kuota: " + err.message);
-  //     setKuotaInfo({});
-  //   }
-  // };
 
   // Handle pilih bidang
   const handleBidangSelect = (bidang) => {
     if (isBidangFull(bidang.id)) return;
     setSelectedBidang(bidang);
+  };
+
+  const handleBidangDescriptionSelect = (bidang) => {
+    setSelectedBidangDescription(bidang);
   };
 
   // Handle input text/textarea
@@ -253,11 +233,77 @@ const PendaftaranMagang = () => {
         {/* Header sederhana */}
         <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-            Pendaftaran Magang
+            Magang Diskominfo - DIY
           </h1>
-          <p className="text-gray-600 mt-2">
-            Silakan lengkapi form pendaftaran magang berikut
-          </p>
+        </div>
+
+        {/* --- DESKRIPSI BIDANG SECTION --- */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+          <div className="flex items-center mb-4">
+            <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center mr-3">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-blue-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-gray-800">
+              Deskripsi Bidang Magang
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {bidangs.map((bidang) => (
+              <div
+                key={bidang.id}
+                className={`cursor-pointer p-5 relative rounded-xl transition-all duration-300 border ${
+                  selectedBidangDescription?.id === bidang.id
+                    ? "border-blue-400 bg-white shadow-md"
+                    : "border-gray-200 hover:border-blue-200"
+                }`}
+                onClick={() => handleBidangDescriptionSelect(bidang)}
+              >
+                <h3 className="font-bold text-lg text-gray-800 mb-1">
+                  {bidang.nama}
+                </h3>
+
+                {selectedBidangDescription?.id === bidang.id && (
+                  <div className="absolute top-2 right-2 bg-blue-100 rounded-full p-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 text-blue-600"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {selectedBidangDescription && (
+            <div className="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-100">
+              <h3 className="font-bold text-gray-700 mb-2">Deskripsi Bidang</h3>
+              <p className="text-gray-600">
+                {selectedBidangDescription.deskripsi}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* --- PERIODE SECTION --- */}
@@ -287,81 +333,7 @@ const PendaftaranMagang = () => {
           <PeriodeMagang onDateChange={handlePeriodeChange} />
         </div>
 
-        {/* --- BIDANG SECTION --- */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-          <div className="flex items-center mb-4">
-            <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center mr-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-blue-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                />
-              </svg>
-            </div>
-            <h2 className="text-lg font-semibold text-gray-800">
-              Pilih Bidang Magang
-            </h2>
-          </div>
-
-          {!periode.start_date && (
-            <div className="bg-yellow-50 border-l-4 border-yellow-300 p-4 mb-6 rounded">
-              <div className="flex items-start">
-                <svg
-                  className="h-5 w-5 text-yellow-400 mr-2 mt-0.5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <p className="text-yellow-700">
-                  Silakan pilih periode terlebih dahulu
-                </p>
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            {bidangs.map((bidang) => (
-              <BidangCard
-                key={bidang.id}
-                bidang={bidang}
-                isSelected={selectedBidang?.id === bidang.id}
-                onClick={() => handleBidangSelect(bidang)}
-                kuota={kuotaInfo[bidang.id]}
-                isFull={isBidangFull(bidang.id)}
-              />
-            ))}
-          </div>
-
-          {selectedBidang && (
-            <div className="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-100">
-              <h3 className="font-bold text-gray-700 mb-2">Deskripsi Bidang</h3>
-              <p className="text-gray-600">{selectedBidang.deskripsi}</p>
-              {kuotaInfo[selectedBidang.id] && (
-                <div className="mt-3">
-                  <span className="text-sm font-medium text-gray-600">
-                    Kuota: {kuotaInfo[selectedBidang.id].current}/
-                    {kuotaInfo[selectedBidang.id].max}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* --- FORM SECTION --- */}
+        {/* --- FORMULIR PENDAFTARAN --- */}
         <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex items-center mb-4">
             <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center mr-3">
@@ -386,120 +358,183 @@ const PendaftaranMagang = () => {
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="space-y-5">
-              {/* NAMA & INSTANSI */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
-                    Nama Lengkap <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="nama"
-                    value={formData.nama}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-300 focus:border-blue-300 transition"
-                    required
-                  />
+            <div className="space-y-6">
+              {/* --- KUOTA BIDANG SECTION --- */}
+              <div className="border-b border-gray-200 pb-6">
+                <div className="flex items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Pilih Bidang Magang
+                  </h3>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
-                    Instansi <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="instansi"
-                    value={formData.instansi}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-300 focus:border-blue-300 transition"
-                    required
-                  />
-                </div>
+                {!periode.start_date || !periode.end_date ? (
+                  <div className="bg-yellow-50 border-l-4 border-yellow-300 p-4 mb-6 rounded">
+                    <div className="flex items-start">
+                      <svg
+                        className="h-5 w-5 text-yellow-400 mr-2 mt-0.5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <p className="text-yellow-700">
+                        Silakan pilih periode terlebih dahulu
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {bidangs.map((bidang) => {
+                      const bidangKuota = kuotaInfo[bidang.id] || {
+                        current: 0,
+                        max: bidang.kuota,
+                      };
+                      const isBidangFull =
+                        bidangKuota.current >= bidangKuota.max;
+
+                      return (
+                        <BidangCard
+                          key={bidang.id}
+                          bidang={bidang}
+                          isSelected={selectedBidang?.id === bidang.id}
+                          onClick={() => handleBidangSelect(bidang)}
+                          kuota={bidangKuota}
+                          isFull={isBidangFull}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
-              {/* NO HP & KEPERLUAN */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
-                    No. HP <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    name="no_hp"
-                    value={formData.no_hp}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-300 focus:border-blue-300 transition"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">
-                    Keperluan <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="keperluan"
-                    value={formData.keperluan}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-300 focus:border-blue-300 transition"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* ALAMAT */}
+              {/* DATA DIRI DAN INFORMASI LAINNYA */}
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Alamat <span className="text-red-400">*</span>
-                </label>
-                <textarea
-                  name="alamat"
-                  value={formData.alamat}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-300 focus:border-blue-300 transition"
-                  rows="3"
-                  required
-                ></textarea>
-              </div>
-
-              {/* UPLOAD FILE */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
-                  Upload Dokumen <span className="text-red-400">*</span>
-                </label>
-                <div className="mt-1 flex items-center">
-                  <label className="cursor-pointer">
-                    <div className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-600 hover:bg-gray-50 transition text-sm">
-                      <span>Pilih File</span>
+                <h3 className="text-lg font-medium text-gray-800 mb-4">
+                  Data Diri
+                </h3>
+                <div className="space-y-5">
+                  {/* NAMA & INSTANSI */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Nama Lengkap <span className="text-red-400">*</span>
+                      </label>
                       <input
-                        type="file"
-                        accept=".zip,.docx,.pdf"
-                        onChange={handleFileChange}
-                        className="hidden"
+                        type="text"
+                        name="nama"
+                        value={formData.nama}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-300 focus:border-blue-300 transition"
                         required
                       />
                     </div>
-                  </label>
-                  {formData.dokumen && (
-                    <span className="ml-3 text-sm text-gray-500">
-                      {formData.dokumen.name}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setFormData((prev) => ({ ...prev, dokumen: null }))
-                        }
-                        className="ml-2 text-gray-400 hover:text-gray-600"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  )}
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Instansi <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="instansi"
+                        value={formData.instansi}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-300 focus:border-blue-300 transition"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* NO HP & KEPERLUAN */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        No. HP <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        name="no_hp"
+                        value={formData.no_hp}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-300 focus:border-blue-300 transition"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Keperluan <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="keperluan"
+                        value={formData.keperluan}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-300 focus:border-blue-300 transition"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* ALAMAT */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Alamat <span className="text-red-400">*</span>
+                    </label>
+                    <textarea
+                      name="alamat"
+                      value={formData.alamat}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-300 focus:border-blue-300 transition"
+                      rows="3"
+                      required
+                    ></textarea>
+                  </div>
+
+                  {/* UPLOAD FILE */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">
+                      Upload Dokumen <span className="text-red-400">*</span>
+                    </label>
+                    <div className="mt-1 flex items-center">
+                      <label className="cursor-pointer">
+                        <div className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-600 hover:bg-gray-50 transition text-sm">
+                          <span>Pilih File</span>
+                          <input
+                            type="file"
+                            accept=".zip,.docx,.pdf"
+                            onChange={handleFileChange}
+                            className="hidden"
+                            required
+                          />
+                        </div>
+                      </label>
+                      {formData.dokumen && (
+                        <span className="ml-3 text-sm text-gray-500">
+                          {formData.dokumen.name}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                dokumen: null,
+                              }))
+                            }
+                            className="ml-2 text-gray-400 hover:text-gray-600"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-400">
+                      Format file: .zip, .docx, atau .pdf (maks. 5MB)
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-1 text-xs text-gray-400">
-                  Format file: .zip, .docx, atau .pdf (maks. 5MB)
-                </p>
               </div>
 
               {/* PESAN ERROR/SUKSES */}
