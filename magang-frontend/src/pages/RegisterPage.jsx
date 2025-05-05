@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../assets/css/Auth.css';
 
 function RegisterPage() {
+    const [name, setName] = useState(''); 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -21,14 +22,14 @@ function RegisterPage() {
             const response = await fetch('http://localhost:8080/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ name, email, password }),  // Include name in request
             });
 
             const data = await response.json();
 
             if (data.message === "Registrasi berhasil") {
                 alert("Registrasi berhasil, silakan login.");
-                navigate('/login');  // Redirect ke halaman login setelah registrasi berhasil
+                navigate('/login');  
             } else {
                 alert("Terjadi kesalahan, coba lagi.");
             }
@@ -43,6 +44,18 @@ function RegisterPage() {
             <div className="auth-container">
                 <h2 className="auth-title">REGISTER</h2>
                 <form onSubmit={handleSubmit}>
+                    {/* Name input field */}
+                    <div className="input-group">
+                        <span className="input-icon">👤</span>
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Nama Lengkap"
+                            required
+                        />
+                    </div>
+                    
                     <div className="input-group">
                         <span className="input-icon">✉</span>
                         <input
