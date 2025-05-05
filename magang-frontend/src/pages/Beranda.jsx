@@ -70,7 +70,6 @@ function Beranda() {
         {/* Content */}
         <div className="hero grid md:grid-cols-2 grid-cols-1 items-center gap-20 pt-32">
           <div className="box">
-            {/* SplitText untuk animasi teks */}
             <h1 className="lg:text-5xl text-3xl font-extrabold mb-7">
               <SplitText
                 text="MAGANG"

@@ -34,7 +34,7 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav className="bg-stone-600 text-white p-4 shadow-md">
+    <nav className="bg-custom-khaki text-white p-4 shadow-md fixed top-0 left-0 w-full z-50">
       <div className="container mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <img src={logo} alt="DISKOMINFO Logo" className="h-12" />

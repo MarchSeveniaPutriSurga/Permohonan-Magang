@@ -3,7 +3,7 @@ import { FaTwitter, FaFacebookF, FaInstagram, FaYoutube } from "react-icons/fa";
 
 function Footer() {
   return (
-    <footer className="footer bg-stone-200 text-neutral-content p-4 w-full">
+    <footer className="footer bg-stone-100 text-neutral-content p-4 w-full">
       <div className="flex justify-between items-center">
         {/* Copyright Section */}
         <div className="flex items-center space-x-2">
@@ -16,7 +16,7 @@ function Footer() {
             href="https://twitter.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-black hover:text-gray-700"
+            className="text-black-500 hover:text-gray-700  hover:scale-110 transition-all duration-300"
           >
             <FaTwitter size={24} />
           </a>
@@ -24,7 +24,7 @@ function Footer() {
             href="https://youtube.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-black hover:text-gray-700"
+            className="text-black-500 hover:text-gray-700  hover:scale-110 transition-all duration-300"
           >
             <FaYoutube size={24} />
           </a>
@@ -32,7 +32,7 @@ function Footer() {
             href="https://facebook.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-black hover:text-gray-700"
+            className="text-black-500 hover:text-gray-700  hover:scale-110 transition-all duration-300"
           >
             <FaFacebookF size={24} />
           </a>
@@ -40,7 +40,7 @@ function Footer() {
             href="https://instagram.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-black hover:text-gray-700"
+            className="text-black-500 hover:text-gray-700  hover:scale-110 transition-all duration-300"
           >
             <FaInstagram size={24} />
           </a>

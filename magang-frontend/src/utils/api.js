@@ -16,8 +16,7 @@ export const getMagangPeriode = async (startDate, endDate) => {
 
     if (!response.ok) throw new Error("Gagal memuat data bidang magang");
 
-    const result = await response.json();
-    return result.data || [];
+    return await response.json();
   } catch (error) {
     console.error("Error fetching bidang data by period:", error);
     throw error;

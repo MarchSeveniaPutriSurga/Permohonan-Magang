@@ -123,7 +123,7 @@ func GetUsedQuota(c *gin.Context) {
 		return
 	}
 
-	// Query untuk menghitung kuota yang digunakan berdasarkan status aktif dan periode tumpang tindih
+	// menghitung kuota yang digunakan berdasarkan status aktif dan periode tumpang tindih
 	query := `
         SELECT bidang_magang_id, COUNT(*) as count 
         FROM magangs 

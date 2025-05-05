@@ -39,16 +39,16 @@ const StatusMagang = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="mt-24 container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
           Status Magang
         </h1>
 
         <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
           {/* Header dengan nama dan status */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-5 text-white">
+          <div className="bg-gradient-to-r from-custom-choco-2 to-custom-choco-1 px-6 py-5 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold">{magangData.name}</h2>
