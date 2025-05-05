@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 package config
 
 import (
@@ -24,4 +22,4 @@ func ConnectDB() {
 	fmt.Println("Koneksi ke database berhasil!")
 
 }
->>>>>>> origin/puput
+

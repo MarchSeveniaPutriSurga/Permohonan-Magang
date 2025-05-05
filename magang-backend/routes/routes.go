@@ -16,18 +16,18 @@ func SetupRoutes(router *gin.Engine) {
 	protected := router.Group("/user")
 	protected.Use(middleware.AuthMiddleware())
 	{
-
 		protected.GET("/profile", controllers.GetUserProfile)
-		api.GET("/bidangs", controllers.GetPublishedBidangs)
-		api.POST("/bidangs", controllers.CreateBidang)
-		api.PUT("/bidangs/:id", controllers.UpdateBidang)
-		api.DELETE("/bidangs/:id", controllers.DeleteBidang)
-		api.POST("/magang", controllers.CreateMagang)
-		api.GET("/magang", controllers.GetAllMagangs)
-		api.PUT("/magang/:id/status", controllers.UpdateMagangStatus)
-		api.GET("/magang/kuota", controllers.GetUsedQuota)
-		api.GET("/magang/periode", controllers.MagangPeriode)
-
+		api := router.Group("/api")
+		{
+			api.GET("/bidangs", controllers.GetPublishedBidangs)
+			api.POST("/bidangs", controllers.CreateBidang)
+			api.PUT("/bidangs/:id", controllers.UpdateBidang)
+			api.DELETE("/bidangs/:id", controllers.DeleteBidang)
+			api.POST("/magang", controllers.CreateMagang)
+			api.GET("/magang", controllers.GetAllMagangs)
+			api.PUT("/magang/:id/status", controllers.UpdateMagangStatus)
+			api.GET("/magang/kuota", controllers.GetUsedQuota)
+			api.GET("/magang/periode", controllers.MagangPeriode)
+		}
 	}
-
 }
