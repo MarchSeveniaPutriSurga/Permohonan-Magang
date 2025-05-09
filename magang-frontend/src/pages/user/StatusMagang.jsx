@@ -1,13 +1,6 @@
 import React from "react";
 import Navbar from "../../components/Navbar";
-import {
-  FaCalendarAlt,
-  FaBriefcase,
-  FaBuilding,
-  FaClock,
-  FaCheckCircle,
-  FaFileAlt,
-} from "react-icons/fa";
+import { FaCalendarAlt, FaBriefcase, FaCheckCircle } from "react-icons/fa";
 
 import "../../assets/css/App.css";
 
@@ -19,7 +12,7 @@ const StatusMagang = () => {
     registerDate: "2025-04-01",
     startDate: "2025-04-15",
     endDate: "2025-07-15",
-    status: "Aktif",
+    status: "Pending",
   };
 
   // Fungsi untuk menentukan warna status
@@ -29,7 +22,7 @@ const StatusMagang = () => {
         return "bg-green-500";
       case "Selesai":
         return "bg-blue-500";
-      case "Menunggu":
+      case "Pending":
         return "bg-yellow-500";
       case "Ditolak":
         return "bg-red-500";

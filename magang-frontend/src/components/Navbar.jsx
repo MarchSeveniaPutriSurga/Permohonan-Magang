@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Gunakan useNavigate untuk navigasi
 import logo from "../assets/images/logo.png";
 import { FaRegUser, FaUserCircle } from "react-icons/fa";
 import { FiLogOut } from "react-icons/fi";
@@ -9,6 +9,7 @@ import "../assets/css/App.css";
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
 
   // Data statis user yang sudah login
   const userData = {
@@ -18,7 +19,7 @@ const Navbar = () => {
 
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
-  // klik di luar dropdown
+  // Klik di luar dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -32,6 +33,12 @@ const Navbar = () => {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
+
+  // Fungsi untuk logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
   return (
     <nav className="bg-custom-khaki text-white p-4 shadow-md fixed top-0 left-0 w-full z-50">
@@ -85,13 +92,13 @@ const Navbar = () => {
               </div>
 
               {/* Menu Options */}
-              <Link
-                to="/login"
+              <button
+                onClick={handleLogout}
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-100 rounded-b-lg flex items-center space-x-2 transition duration-200"
               >
                 <FiLogOut className="text-red-500" />
                 <span>Logout</span>
-              </Link>
+              </button>
             </div>
           )}
         </div>

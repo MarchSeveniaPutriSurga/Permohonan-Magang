@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Upload } from "lucide-react";
 
-export default function ImprovedFileUpload({ onFileChange }) {
+export default function UploadFile({ onFileChange }) {
   const [fileName, setFileName] = useState("");
   const [isDragging, setIsDragging] = useState(false);
 

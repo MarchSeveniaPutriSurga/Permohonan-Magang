@@ -218,32 +218,35 @@ func MagangPeriode(c *gin.Context) {
 	config.DB.Raw("SELECT id, start_date, end_date, status_magang FROM magangs WHERE bidang_magang_id = '1ae5a49d-0e63-45f0-b103-c856661b97d0' LIMIT 1").Scan(&dateCheck)
 	log.Println("Sample date from DB:", dateCheck)
 
-	// raw SQL dengan parameter string langsung
 	query := `
-		SELECT 
-			b.id, 
-			b.nama AS nama_bidang, 
-			b.kuota, 
-			COALESCE(m.count, 0) AS jumlah_magang
-		FROM 
-			bidang_magangs b
-		LEFT JOIN (
-			SELECT 
-				bidang_magang_id, 
-				COUNT(*) AS count
-			FROM 
-				magangs
-			WHERE 
-				status_magang = 'Aktif' 
-				AND start_date >= ?
-				AND end_date <= ?
-			GROUP BY 
-				bidang_magang_id
-		) m ON b.id = m.bidang_magang_id
-	`
+    SELECT 
+        b.id, 
+        b.nama AS nama_bidang, 
+        b.kuota, 
+        COALESCE(m.count, 0) AS jumlah_magang
+    FROM 
+        bidang_magangs b
+    LEFT JOIN (
+        SELECT 
+            bidang_magang_id, 
+            COUNT(*) AS count
+        FROM 
+            magangs
+        WHERE 
+            status_magang = 'Aktif' 
+            AND (
+                -- Periode magang sudah dimulai sebelum atau saat tanggal mulai pencarian
+                (start_date <= ? AND end_date >= ?)
+                OR (start_date <= ? AND end_date >= ?)
+                OR (start_date >= ? AND end_date <= ?)
+            )
+        GROUP BY 
+            bidang_magang_id
+    ) m ON b.id = m.bidang_magang_id
+`
 
-	// query dengan parameter string langsung
-	err := config.DB.Raw(query, startDateStr, endDateStr).Scan(&bidangWithCount).Error
+	// Perhatikan parameter yang bertambah jumlahnya
+	err := config.DB.Raw(query, endDateStr, startDateStr, startDateStr, endDateStr, startDateStr, endDateStr).Scan(&bidangWithCount).Error
 
 	// cek jika ada error pada query
 	if err != nil {
