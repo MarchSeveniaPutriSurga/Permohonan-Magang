@@ -1,28 +1,42 @@
 const API_URL = "http://localhost:8080/api";
+const USER_URL = "http://localhost:8080/user";
 
+// Ambil semua bidang magang (protected, butuh token)
 export const getPublishedBidangs = async () => {
-  const response = await fetch(`${API_URL}/bidangs`);
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(`${API_URL}/bidangs`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
   if (!response.ok) {
     throw new Error("Failed to fetch bidang data");
   }
+
   return await response.json();
 };
 
+// Ambil kuota bidang untuk periode tertentu (protected)
 export const getMagangPeriode = async (startDate, endDate) => {
-  try {
-    const response = await fetch(
-      `${API_URL}/magang/periode?start_date=${startDate}&end_date=${endDate}`
-    );
+  const token = localStorage.getItem("token");
 
-    if (!response.ok) throw new Error("Gagal memuat data bidang magang");
+  const response = await fetch(
+    `${API_URL}/magang/periode?start_date=${startDate}&end_date=${endDate}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching bidang data by period:", error);
-    throw error;
-  }
+  if (!response.ok) throw new Error("Gagal memuat data bidang magang");
+
+  return await response.json();
 };
 
+// Kirim pendaftaran magang (protected)
 export const createMagang = async (data) => {
   const formData = new FormData();
   Object.keys(data).forEach((key) => {
@@ -30,12 +44,18 @@ export const createMagang = async (data) => {
       formData.append(key, data[key]);
     }
   });
+
   if (data.dokumen) {
     formData.append("dokumen", data.dokumen);
   }
 
+  const token = localStorage.getItem("token");
+
   const response = await fetch(`${API_URL}/magang`, {
     method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
     body: formData,
   });
 
@@ -45,4 +65,22 @@ export const createMagang = async (data) => {
   }
 
   return await response.json();
+};
+
+// Ambil status magang user yang sedang login (protected)
+export const getStatusMagangSaya = async () => {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(`${USER_URL}/magang/status-saya`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Gagal mengambil status magang");
+  }
+
+  const result = await response.json();
+  return result.data;
 };

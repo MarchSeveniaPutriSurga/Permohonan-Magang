@@ -15,6 +15,13 @@ import (
 
 // CreateMagang
 func CreateMagang(c *gin.Context) {
+	userIDInterface, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userID := userIDInterface.(uint)
+
 	id := uuid.New().String()
 
 	// Ambil data form
@@ -52,8 +59,9 @@ func CreateMagang(c *gin.Context) {
 
 	// Simpan data pendaftaran dengan status "Pending"
 	result := config.DB.Exec(
-		"INSERT INTO magangs (id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, dokumen, bidang_magang_id, status_magang, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, filename, bidang_id, "Pending", time.Now())
+		"INSERT INTO magangs (id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, dokumen, bidang_magang_id, status_magang, created_at, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, filename, bidang_id, "Pending", time.Now(), userID,
+	)
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan data magang"})
@@ -269,4 +277,22 @@ func MagangPeriode(c *gin.Context) {
 		"data":    bidangWithCount,
 	}
 	c.JSON(http.StatusOK, result)
+}
+
+func GetStatusMagangByUser(c *gin.Context) {
+	userIDInterface, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	userID := userIDInterface.(uint)
+
+	var magangs []models.Magang
+	if err := config.DB.Where("user_id = ?", userID).Find(&magangs).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data magang"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": magangs})
 }
