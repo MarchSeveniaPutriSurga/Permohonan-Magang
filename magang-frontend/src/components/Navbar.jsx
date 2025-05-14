@@ -1,109 +1,158 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Gunakan useNavigate untuk navigasi
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo.png";
-import { FaRegUser, FaUserCircle } from "react-icons/fa";
-import { FiLogOut } from "react-icons/fi";
-
-import "../assets/css/App.css";
+import { FaUserCircle } from "react-icons/fa";
+import { FiLogOut, FiMenu } from "react-icons/fi";
+import { getUserProfile } from "../utils/api";
 
 const Navbar = () => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userData, setUserData] = useState({ name: "", email: "" });
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);  // Reference untuk dropdown
   const navigate = useNavigate();
 
-  // Data statis user yang sudah login
-  const userData = {
-    name: "John Doe",
-    email: "johndoe@example.com",
-  };
-
-  const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
-
-  // Klik di luar dropdown
   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const user = await getUserProfile();
+        setUserData(user);
+      } catch (err) {
+        console.error("Gagal memuat profil user", err);
+      }
+    };
+    fetchProfile();
+
+    // Menambahkan event listener untuk klik di luar dropdown
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
+        setDropdownOpen(false);  // Menutup dropdown jika klik di luar
       }
     };
 
-    document.addEventListener("click", handleClickOutside);
+    // Menambahkan event listener saat komponen di-mount
+    document.addEventListener("mousedown", handleClickOutside);
 
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
+    // Membersihkan event listener saat komponen di-unmount
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fungsi untuk logout
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
 
   return (
-    <nav className="bg-custom-khaki text-white p-4 shadow-md fixed top-0 left-0 w-full z-50">
-      <div className="container mx-auto flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <img src={logo} alt="DISKOMINFO Logo" className="h-12" />
-          <div>
-            <h1 className="text-xl font-bold">DISKOMINFO</h1>
-            <p className="text-sm">Daerah Istimewa Yogyakarta</p>
+    <>
+      {/* Navbar */}
+      <nav className="bg-custom-khaki text-white p-4 shadow-md fixed top-0 left-0 w-full z-50">
+        <div className="container mx-auto flex items-center justify-between">
+          {/* Logo & Title */}
+          <div className="flex items-center space-x-3">
+            <img src={logo} alt="DISKOMINFO Logo" className="h-12" />
+            <div>
+              <h1 className="text-xl font-bold">DISKOMINFO</h1>
+              <p className="text-sm">Daerah Istimewa Yogyakarta</p>
+            </div>
+          </div>
+
+          {/* Nav Items - Desktop */}
+          <div className="hidden md:flex space-x-6">
+            <Link to="/pendaftaran-magang" className="text-lg font-semibold hover:text-neutral-300">
+              Magang
+            </Link>
+            <Link to="/status-magang" className="text-lg font-semibold hover:text-neutral-300">
+              Status Magang
+            </Link>
+
+            {/* Dropdown for User Info & Logout */}
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center space-x-2 text-sm">
+                <FaUserCircle className="text-2xl" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {dropdownOpen && (
+                <div
+                  ref={dropdownRef}  // Menghubungkan dropdown dengan ref
+                  className="absolute right-0 mt-2 bg-white text-black rounded-lg shadow-lg w-48 py-2">
+                  <div className="px-4 py-2 flex items-center space-x-2">
+                    <FaUserCircle className="text-xl text-blue-500" />
+                    <div>
+                      <p className="font-semibold text-gray-800">{userData.name || "Loading..."}</p>
+                      <p className="text-sm text-gray-500">{userData.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center space-x-2 px-4 py-2 w-full text-left text-red-500 hover:bg-gray-200">
+                    <FiLogOut className="text-xl" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Hamburger - Mobile */}
+          <button
+            className="md:hidden text-3xl text-white focus:outline-none"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <FiMenu />
+          </button>
+        </div>
+      </nav>
+
+      {/* Sidebar - Mobile */}
+      <div
+        className={`fixed top-0 left-0 w-64 h-full bg-stone-200 shadow-lg transform transition-transform z-50 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+      >
+        <div className="p-4 border-b-2 border-gray-300">
+          <div className="flex items-center space-x-3">
+            <FaUserCircle className="text-3xl text-blue-500" />
+            <div>
+              <p className="font-semibold text-gray-800">{userData.name || "Loading..."}</p>
+              <p className="text-sm text-gray-500">{userData.email}</p>
+            </div>
           </div>
         </div>
-
-        <div className="hidden md:flex space-x-6">
+        <div className="flex flex-col p-4 space-y-4">
           <Link
             to="/pendaftaran-magang"
-            className="text-lg font-semibold hover:text-neutral-300 hover:no-underline transition duration-300"
+            className="text-lg font-medium text-gray-800 hover:text-neutral-600"
+            onClick={() => setSidebarOpen(false)}
           >
             Magang
           </Link>
           <Link
             to="/status-magang"
-            className="text-lg font-semibold hover:text-neutral-300 hover:no-underline transition duration-300"
+            className="text-lg font-medium text-gray-800 hover:text-neutral-600"
+            onClick={() => setSidebarOpen(false)}
           >
             Status Magang
           </Link>
-        </div>
-
-        {/* Dropdown Profil */}
-        <div className="relative" ref={dropdownRef}>
           <button
-            onClick={toggleDropdown}
-            className="focus:outline-none text-3xl cursor-pointer hover:text-neutral-400 transition duration-300 flex items-center"
+            onClick={handleLogout}
+            className="mt-4 flex items-center text-red-500 hover:text-red-700 space-x-2"
           >
-            <FaUserCircle />
+            <FiLogOut />
+            <span>Logout</span>
           </button>
-
-          {/* Dropdown Menu dengan Informasi User */}
-          {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 bg-white text-black rounded-lg shadow-xl w-64 transition-all duration-300 ease-in-out">
-              {/* User Info Section */}
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex items-center space-x-3 mb-2">
-                  <FaUserCircle className="text-3xl text-blue-500" />
-                  <div>
-                    <p className="font-semibold text-gray-800">
-                      {userData.name}
-                    </p>
-                    <p className="text-sm text-gray-500">{userData.email}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Menu Options */}
-              <button
-                onClick={handleLogout}
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-red-100 rounded-b-lg flex items-center space-x-2 transition duration-200"
-              >
-                <FiLogOut className="text-red-500" />
-                <span>Logout</span>
-              </button>
-            </div>
-          )}
         </div>
       </div>
-    </nav>
+
+      {/* Overlay when sidebar is open */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black opacity-30 z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+    </>
   );
 };
 

@@ -84,3 +84,18 @@ export const getStatusMagangSaya = async () => {
   const result = await response.json();
   return result.data;
 };
+
+export const getUserProfile = async () => {
+  const token = localStorage.getItem("token");
+  const response = await fetch("http://localhost:8080/user/profile", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error("Gagal mengambil profil user");
+  }
+  const result = await response.json();
+  return result.user;
+};
+
