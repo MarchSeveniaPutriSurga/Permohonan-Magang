@@ -22,4 +22,3 @@ func ConnectDB() {
 	fmt.Println("Koneksi ke database berhasil!")
 
 }
-

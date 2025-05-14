@@ -14,4 +14,7 @@ type Magang struct {
 	Dokumen        string    `json:"dokumen"`
 	BidangMagangID string    `json:"bidang_magang_id"`
 	StatusMagang   string    `json:"status_magang"`
+	UserID         uint      `json:"user_id"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }

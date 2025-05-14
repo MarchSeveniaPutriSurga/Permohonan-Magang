@@ -229,18 +229,28 @@ const PendaftaranMagang = () => {
       // });
       // setSelectedBidang(null);
 
+      // if (isAlreadyRegistered) {
+      //   // Jika sudah terdaftar, beri notifikasi
+      //   Swal.fire({
+      //     icon: "warning",
+      //     title: "Pendaftaran Sudah Ada",
+      //     text: "Kamu sudah terdaftar untuk magang. Silakan cek status magang.",
+      //     confirmButtonColor: "#3b82f6",
+      //   });
+      //   return;
+      // }
+
       await createMagang({
         ...formData,
         ...periode,
         bidang_magang_id: selectedBidang.id,
       });
 
-      // Tampilkan SweetAlert sukses
       Swal.fire({
         icon: "success",
         title: "Pendaftaran Berhasil",
         text: "Data magang kamu sudah dikirim!",
-        confirmButtonColor: "#3b82f6", // warna tombol biru
+        confirmButtonColor: "#3b82f6",
       });
 
       // Reset form
@@ -449,7 +459,7 @@ const PendaftaranMagang = () => {
                 )}
               </div>
 
-              {/* DATA DIRI DAN INFORMASI LAINNYA */}
+              {/* FORMULIR PENDAFTARAN */}
               <div>
                 <h3 className="text-lg font-medium text-gray-800 mb-4">
                   Data Diri

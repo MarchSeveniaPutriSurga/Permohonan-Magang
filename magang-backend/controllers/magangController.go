@@ -15,6 +15,13 @@ import (
 
 // CreateMagang
 func CreateMagang(c *gin.Context) {
+	userIDInterface, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userID := userIDInterface.(uint)
+
 	id := uuid.New().String()
 
 	// Ambil data form
@@ -52,8 +59,9 @@ func CreateMagang(c *gin.Context) {
 
 	// Simpan data pendaftaran dengan status "Pending"
 	result := config.DB.Exec(
-		"INSERT INTO magangs (id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, dokumen, bidang_magang_id, status_magang, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, filename, bidang_id, "Pending", time.Now())
+		"INSERT INTO magangs (id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, dokumen, bidang_magang_id, status_magang, created_at, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		id, nama, keperluan, instansi, no_hp, alamat, start_date, end_date, filename, bidang_id, "Pending", time.Now(), userID,
+	)
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan data magang"})
@@ -218,32 +226,35 @@ func MagangPeriode(c *gin.Context) {
 	config.DB.Raw("SELECT id, start_date, end_date, status_magang FROM magangs WHERE bidang_magang_id = '1ae5a49d-0e63-45f0-b103-c856661b97d0' LIMIT 1").Scan(&dateCheck)
 	log.Println("Sample date from DB:", dateCheck)
 
-	// raw SQL dengan parameter string langsung
 	query := `
-		SELECT 
-			b.id, 
-			b.nama AS nama_bidang, 
-			b.kuota, 
-			COALESCE(m.count, 0) AS jumlah_magang
-		FROM 
-			bidang_magangs b
-		LEFT JOIN (
-			SELECT 
-				bidang_magang_id, 
-				COUNT(*) AS count
-			FROM 
-				magangs
-			WHERE 
-				status_magang = 'Aktif' 
-				AND start_date >= ?
-				AND end_date <= ?
-			GROUP BY 
-				bidang_magang_id
-		) m ON b.id = m.bidang_magang_id
-	`
+    SELECT 
+        b.id, 
+        b.nama AS nama_bidang, 
+        b.kuota, 
+        COALESCE(m.count, 0) AS jumlah_magang
+    FROM 
+        bidang_magangs b
+    LEFT JOIN (
+        SELECT 
+            bidang_magang_id, 
+            COUNT(*) AS count
+        FROM 
+            magangs
+        WHERE 
+            status_magang = 'Aktif' 
+            AND (
+                -- Periode magang sudah dimulai sebelum atau saat tanggal mulai pencarian
+                (start_date <= ? AND end_date >= ?)
+                OR (start_date <= ? AND end_date >= ?)
+                OR (start_date >= ? AND end_date <= ?)
+            )
+        GROUP BY 
+            bidang_magang_id
+    ) m ON b.id = m.bidang_magang_id
+`
 
-	// query dengan parameter string langsung
-	err := config.DB.Raw(query, startDateStr, endDateStr).Scan(&bidangWithCount).Error
+	// Perhatikan parameter yang bertambah jumlahnya
+	err := config.DB.Raw(query, endDateStr, startDateStr, startDateStr, endDateStr, startDateStr, endDateStr).Scan(&bidangWithCount).Error
 
 	// cek jika ada error pada query
 	if err != nil {
@@ -266,4 +277,22 @@ func MagangPeriode(c *gin.Context) {
 		"data":    bidangWithCount,
 	}
 	c.JSON(http.StatusOK, result)
+}
+
+func GetStatusMagangByUser(c *gin.Context) {
+	userIDInterface, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	userID := userIDInterface.(uint)
+
+	var magangs []models.Magang
+	if err := config.DB.Where("user_id = ?", userID).Find(&magangs).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data magang"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": magangs})
 }
