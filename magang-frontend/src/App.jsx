@@ -16,7 +16,7 @@ function App() {
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/admin" element={<Dashboard />} />
+        <Route path="/dashboard/*" element={<Dashboard />} />
         <Route path="/pendaftaran-magang" element={<PendaftaranMagang />} />
         <Route path="/" element={<Beranda />} />
         <Route path="/pendaftaran-magang" element={<PendaftaranMagang />} />
