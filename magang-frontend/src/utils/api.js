@@ -99,3 +99,30 @@ export const getUserProfile = async () => {
   return result.user;
 };
 
+//admin area
+export const getDashboardStats = async () => {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/dashboard/stats`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Gagal ambil statistik dashboard");
+  return await response.json();
+};
+
+export const getPendaftaranChart = async () => {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/pendaftaran/chart`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Gagal ambil data chart pendaftaran");
+  return await response.json();
+};
+
+export const getDistribusiBidangMagang = async () => {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/bidang/distribusi`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Gagal ambil distribusi bidang magang");
+  return await response.json();
+};

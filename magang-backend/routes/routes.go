@@ -39,6 +39,11 @@ func SetupRoutes(router *gin.Engine) {
 			// Kuota dan periode
 			api.GET("/magang/kuota", controllers.GetUsedQuota)
 			api.GET("/magang/periode", controllers.MagangPeriode)
+
+			//admin
+			api.GET("/dashboard/stats", controllers.GetDashboardStats)
+			api.GET("/pendaftaran/chart", controllers.GetPendaftaranChart)
+			api.GET("/bidang/distribusi", controllers.GetBidangDistribusi)
 		}
 	}
 }
