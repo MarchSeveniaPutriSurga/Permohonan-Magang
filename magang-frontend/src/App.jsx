@@ -7,7 +7,6 @@ import Dashboard from "./pages/Dashboard";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-// import "bootstrap/dist/css/bootstrap.min.css";
 
 function App() {
   const location = useLocation();
@@ -15,7 +14,6 @@ function App() {
     <>
       <Routes>
         <Route path="/" element={<Beranda />} />
-        {/* <Route path="/pendaftaran-magang" element={<PendaftaranMagang />} /> */}
         <Route
           path="/pendaftaran-magang"
           element={
@@ -32,10 +30,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* <Route path="/status-magang" element={<StatusMagang />} /> */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/admin" element={<Dashboard />} />
         <Route path="/dashboard/*" element={<Dashboard />} />
       </Routes>
       <Footer />
