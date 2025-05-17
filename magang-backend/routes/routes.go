@@ -8,11 +8,11 @@ import (
 )
 
 func SetupRoutes(router *gin.Engine) {
-	// ✅ Public routes: tidak butuh token
+	// Public routes
 	router.POST("/register", controllers.Register)
 	router.POST("/login", controllers.Login)
 
-	// ✅ Protected routes (wajib token)
+	// Protected routes (wajib token)
 	protected := router.Group("/")
 	protected.Use(middleware.AuthMiddleware())
 	{
