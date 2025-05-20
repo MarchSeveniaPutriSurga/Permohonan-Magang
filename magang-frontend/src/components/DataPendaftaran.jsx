@@ -45,10 +45,8 @@ function DataPendaftaran() {
     const fetchPendaftar = async (resetSearch = false) => {
         setLoading(true);
 
-        // Reset search term when param is true
         if (resetSearch) {
             setSearchTerm("");
-            // Reset sorting as well to default state
             setSortConfig({ key: null, direction: 'ascending' });
         }
 
@@ -141,7 +139,6 @@ function DataPendaftaran() {
                     </button>
                 </div>
 
-                {/* Alert Messages */}
                 {alert.message && (
                     <div className={`mb-4 p-4 rounded-md ${alert.type === "success" ? "bg-green-50 text-green-800 border-l-4 border-green-400" :
                         "bg-red-50 text-red-800 border-l-4 border-red-400"

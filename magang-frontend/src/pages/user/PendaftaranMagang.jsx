@@ -95,10 +95,8 @@ const PendaftaranMagang = () => {
     try {
       setLoading(true);
 
-      // Panggil fungsi getMagangPeriode yang sudah ada di api.js
       const result = await getMagangPeriode(dates.start_date, dates.end_date);
 
-      // Tambahkan log untuk cek
       console.log("Hasil result dari API:", result);
 
       if (result.status === "200" && result.data) {
@@ -207,39 +205,6 @@ const PendaftaranMagang = () => {
     setSuccess("");
 
     try {
-      // await createMagang({
-      //   ...formData,
-      //   ...periode,
-      //   bidang_magang_id: selectedBidang.id,
-      // });
-
-      // setSuccess("Pendaftaran berhasil!");
-
-      // // Perbarui kuota setelah status magang diubah
-      // updateKuotaAfterStatusChange(selectedBidang.id);
-
-      // // Reset form
-      // setFormData({
-      //   nama: "",
-      //   keperluan: "",
-      //   instansi: "",
-      //   no_hp: "",
-      //   alamat: "",
-      //   dokumen: null,
-      // });
-      // setSelectedBidang(null);
-
-      // if (isAlreadyRegistered) {
-      //   // Jika sudah terdaftar, beri notifikasi
-      //   Swal.fire({
-      //     icon: "warning",
-      //     title: "Pendaftaran Sudah Ada",
-      //     text: "Kamu sudah terdaftar untuk magang. Silakan cek status magang.",
-      //     confirmButtonColor: "#3b82f6",
-      //   });
-      //   return;
-      // }
-
       await createMagang({
         ...formData,
         ...periode,
@@ -313,11 +278,10 @@ const PendaftaranMagang = () => {
             {bidangs.map((bidang) => (
               <div
                 key={bidang.id}
-                className={`cursor-pointer p-5 relative rounded-xl transition-all duration-300 border ${
-                  selectedBidangDescription?.id === bidang.id
+                className={`cursor-pointer p-5 relative rounded-xl transition-all duration-300 border ${selectedBidangDescription?.id === bidang.id
                     ? "border-blue-400 bg-white shadow-md"
                     : "border-gray-200 hover:border-blue-200"
-                }`}
+                  }`}
                 onClick={() => handleBidangDescriptionSelect(bidang)}
               >
                 <h3 className="font-bold text-lg text-gray-800 mb-1">
@@ -606,10 +570,9 @@ const PendaftaranMagang = () => {
                   type="submit"
                   disabled={!isFormComplete() || loading}
                   className={`w-full px-5 py-2.5 rounded-lg font-medium text-white transition 
-                    ${
-                      !isFormComplete() || loading
-                        ? "bg-gray-300 cursor-not-allowed"
-                        : "bg-blue-500 hover:bg-blue-600"
+                    ${!isFormComplete() || loading
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : "bg-blue-500 hover:bg-blue-600"
                     }`}
                 >
                   {loading ? (

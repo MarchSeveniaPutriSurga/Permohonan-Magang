@@ -1,7 +1,7 @@
 const API_URL = "http://localhost:8080/api";
 const USER_URL = "http://localhost:8080/user";
 
-// Ambil semua bidang magang (protected, butuh token)
+// ambil semua bidang magang (protected, butuh token)
 export const getPublishedBidangs = async () => {
   const token = localStorage.getItem("token");
 
@@ -18,7 +18,7 @@ export const getPublishedBidangs = async () => {
   return await response.json();
 };
 
-// Ambil kuota bidang untuk periode tertentu (protected)
+// ambil kuota bidang untuk periode tertentu (protected)
 export const getMagangPeriode = async (startDate, endDate) => {
   const token = localStorage.getItem("token");
 
@@ -36,7 +36,7 @@ export const getMagangPeriode = async (startDate, endDate) => {
   return await response.json();
 };
 
-// Kirim pendaftaran magang (protected)
+// kirim pendaftaran magang (protected)
 export const createMagang = async (data) => {
   const formData = new FormData();
   Object.keys(data).forEach((key) => {
@@ -67,7 +67,7 @@ export const createMagang = async (data) => {
   return await response.json();
 };
 
-// Ambil status magang user yang sedang login (protected)
+// ambil status magang user yang sedang login (protected)
 export const getStatusMagangSaya = async () => {
   const token = localStorage.getItem("token");
 
