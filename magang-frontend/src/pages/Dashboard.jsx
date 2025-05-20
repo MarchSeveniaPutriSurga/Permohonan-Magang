@@ -38,11 +38,11 @@ const Dashboard = () => {
               </Button>
             </Link>
             
-            <Link to="/pendaftaran-magang" className="text-decoration-none">
+            {/* <Link to="/pendaftaran-magang" className="text-decoration-none">
               <Button variant="link" className="text-white mb-3 text-start">
                 Pendaftaran Magang
               </Button>
-            </Link>
+            </Link> */}
             
             <Button 
               variant="link" 

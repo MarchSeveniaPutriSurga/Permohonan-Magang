@@ -26,7 +26,8 @@ func SetupRoutes(router *gin.Engine) {
 		api := protected.Group("/api")
 		{
 			// Bidang magang
-			api.GET("/bidangs", controllers.GetPublishedBidangs)
+			api.GET("/bidangs", controllers.GetAllBidangs)                // Menampilkan semua bidang magang (untuk admin)
+			api.GET("/bidangs/published", controllers.GetPublishedBidangs) // Menampilkan bidang yang dipublikasikan (untuk user)
 			api.POST("/bidangs", controllers.CreateBidang)
 			api.PUT("/bidangs/:id", controllers.UpdateBidang)
 			api.DELETE("/bidangs/:id", controllers.DeleteBidang)
