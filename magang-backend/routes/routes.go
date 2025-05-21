@@ -8,11 +8,11 @@ import (
 )
 
 func SetupRoutes(router *gin.Engine) {
-	// ✅ Public routes: tidak butuh token
+	// Public routes
 	router.POST("/register", controllers.Register)
 	router.POST("/login", controllers.Login)
 
-	// ✅ Protected routes (wajib token)
+	// Protected routes (wajib token)
 	protected := router.Group("/")
 	protected.Use(middleware.AuthMiddleware())
 	{
@@ -40,6 +40,11 @@ func SetupRoutes(router *gin.Engine) {
 			// Kuota dan periode
 			api.GET("/magang/kuota", controllers.GetUsedQuota)
 			api.GET("/magang/periode", controllers.MagangPeriode)
+
+			//admin
+			api.GET("/dashboard/stats", controllers.GetDashboardStats)
+			api.GET("/pendaftaran/chart", controllers.GetPendaftaranChart)
+			api.GET("/bidang/distribusi", controllers.GetBidangDistribusi)
 		}
 	}
 }

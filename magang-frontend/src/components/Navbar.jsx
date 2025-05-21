@@ -9,7 +9,7 @@ const Navbar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userData, setUserData] = useState({ name: "", email: "" });
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);  // Reference untuk dropdown
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,17 +23,14 @@ const Navbar = () => {
     };
     fetchProfile();
 
-    // Menambahkan event listener untuk klik di luar dropdown
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false);  // Menutup dropdown jika klik di luar
+        setDropdownOpen(false);
       }
     };
 
-    // Menambahkan event listener saat komponen di-mount
     document.addEventListener("mousedown", handleClickOutside);
 
-    // Membersihkan event listener saat komponen di-unmount
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
@@ -56,7 +53,7 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Nav Items - Desktop */}
+          {/* Nav Items */}
           <div className="hidden md:flex space-x-6">
             <Link to="/pendaftaran-magang" className="text-lg font-semibold hover:text-neutral-300">
               Magang
@@ -76,7 +73,7 @@ const Navbar = () => {
               {/* Dropdown Menu */}
               {dropdownOpen && (
                 <div
-                  ref={dropdownRef}  // Menghubungkan dropdown dengan ref
+                  ref={dropdownRef}
                   className="absolute right-0 mt-2 bg-white text-black rounded-lg shadow-lg w-48 py-2">
                   <div className="px-4 py-2 flex items-center space-x-2">
                     <FaUserCircle className="text-xl text-blue-500" />
@@ -96,7 +93,7 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Hamburger - Mobile */}
+          {/* Hamburger */}
           <button
             className="md:hidden text-3xl text-white focus:outline-none"
             onClick={() => setSidebarOpen(true)}
@@ -145,7 +142,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Overlay when sidebar is open */}
+      {/* Overlay waktu sidebar dibuka */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black opacity-30 z-40"

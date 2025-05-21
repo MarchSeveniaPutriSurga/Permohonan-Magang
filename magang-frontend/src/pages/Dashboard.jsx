@@ -3,6 +3,7 @@ import { Container, Row, Col, Button } from "react-bootstrap";
 import { Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
 import Overview from "../components/Overview";
 import BidangMagang from "../components/BidangMagang";
+import DataPendaftaran from "../components/DataPendaftaran";
 
 const Dashboard = () => {
   const location = useLocation();
@@ -18,34 +19,34 @@ const Dashboard = () => {
             </Button>
             <span className="ms-3" style={{ fontSize: "18px", fontWeight: "bold" }}>Admin</span>
           </div>
-          
+
           <div className="d-flex flex-column">
             <Link to="/dashboard/overview" className="text-decoration-none">
-              <Button 
-                variant="link" 
+              <Button
+                variant="link"
                 className={`text-white mb-3 text-start ${location.pathname === '/dashboard/overview' ? 'active' : ''}`}
               >
                 Overview
               </Button>
             </Link>
-            
+
             <Link to="/dashboard/bidang-magang" className="text-decoration-none">
-              <Button 
-                variant="link" 
+              <Button
+                variant="link"
                 className={`text-white mb-3 text-start ${location.pathname.includes('bidang-magang') ? 'active' : ''}`}
               >
                 Bidang Magang
               </Button>
             </Link>
-            
-            {/* <Link to="/pendaftaran-magang" className="text-decoration-none">
+
+            <Link to="/dashboard/data-pendaftaran" className="text-decoration-none">
               <Button variant="link" className="text-white mb-3 text-start">
-                Pendaftaran Magang
+                Data Pendaftaran
               </Button>
-            </Link> */}
-            
-            <Button 
-              variant="link" 
+            </Link>
+
+            <Button
+              variant="link"
               className="text-white text-start"
               onClick={() => {
                 // Handle logout logic here
@@ -59,13 +60,12 @@ const Dashboard = () => {
 
         {/* Main Content */}
         <Col xs={9} className="p-4">
-
           <Routes>
-          <Route path="overview" element={<Overview />} />
-          <Route path="bidang-magang" element={<BidangMagang />} />
-          <Route path="*" element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={<Overview />} />
+            <Route path="bidang-magang" element={<BidangMagang />} />
+            <Route path="data-pendaftaran" element={<DataPendaftaran />} />
+            <Route path="*" element={<Navigate to="overview" replace />} />
           </Routes>
-
         </Col>
       </Row>
     </Container>

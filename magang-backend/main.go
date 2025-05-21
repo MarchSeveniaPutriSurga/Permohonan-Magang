@@ -24,6 +24,8 @@ func main() {
 		c.Next()
 	})
 
+	router.Static("/uploads", "./uploads")
+
 	routes.SetupRoutes(router)
 	router.Run(":8080")
 }
