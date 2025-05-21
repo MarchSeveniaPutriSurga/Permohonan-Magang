@@ -9,7 +9,18 @@ import (
 	"github.com/google/uuid"
 )
 
-// mengembalikan semua bidang magang yang dipublikasikan
+// GetAllBidangs mengembalikan semua bidang magang untuk admin dashboard
+func GetAllBidangs(c *gin.Context) {
+	var bidangs []models.BidangMagang
+	err := config.DB.Raw("SELECT id, nama, deskripsi, kuota, publish FROM bidang_magangs").Scan(&bidangs).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, bidangs)
+}
+
+// GetPublishedBidangs mengembalikan bidang magang yang dipublish untuk user
 func GetPublishedBidangs(c *gin.Context) {
 	var bidangs []models.BidangMagang
 	err := config.DB.Raw("SELECT id, nama, deskripsi, kuota, publish FROM bidang_magangs WHERE publish = ?", 1).Scan(&bidangs).Error
@@ -20,52 +31,66 @@ func GetPublishedBidangs(c *gin.Context) {
 	c.JSON(http.StatusOK, bidangs)
 }
 
-// membuat bidang magang baru
+// CreateBidang menambahkan bidang magang baru
 func CreateBidang(c *gin.Context) {
 	var input models.BidangMagang
+
+	// Bind JSON ke struct
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	id := uuid.New().String()
+	// Buat ID baru dengan UUID
+	input.ID = uuid.New().String()
 
-	result := config.DB.Exec("INSERT INTO bidang_magangs (id, nama, deskripsi, kuota, publish) VALUES (?, ?, ?, ?, ?)", id, input.Nama, input.Deskripsi, input.Kuota, input.Publish)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+	// Simpan ke DB
+	if err := config.DB.Create(&input).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"id": id, "message": "Bidang magang created successfully"})
+	c.JSON(http.StatusCreated, input)
 }
 
-// mengupdate data bidang magang berdasarkan ID
+// UpdateBidang mengubah data bidang magang berdasarkan ID
 func UpdateBidang(c *gin.Context) {
 	id := c.Param("id")
+
+	var bidang models.BidangMagang
+	if err := config.DB.First(&bidang, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Bidang not found"})
+		return
+	}
+
 	var input models.BidangMagang
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	result := config.DB.Exec("UPDATE bidang_magangs SET nama = ?, deskripsi = ?, kuota = ?, publish = ? WHERE id = ?", input.Nama, input.Deskripsi, input.Kuota, input.Publish, id)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+	// Update fields
+	bidang.Nama = input.Nama
+	bidang.Deskripsi = input.Deskripsi
+	bidang.Kuota = input.Kuota
+	bidang.Publish = input.Publish
+
+	if err := config.DB.Save(&bidang).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Bidang magang updated successfully"})
+	c.JSON(http.StatusOK, bidang)
 }
 
-// menghapus bidang magang berdasarkan ID
+// DeleteBidang menghapus bidang magang berdasarkan ID
 func DeleteBidang(c *gin.Context) {
 	id := c.Param("id")
 
-	result := config.DB.Exec("DELETE FROM bidang_magangs WHERE id = ?", id)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+	if err := config.DB.Delete(&models.BidangMagang{}, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Bidang magang deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Bidang deleted successfully"})
 }
