@@ -2,10 +2,25 @@ const API_URL = "http://localhost:8080/api";
 const USER_URL = "http://localhost:8080/user";
 
 // ambil semua bidang magang (protected, butuh token)
+// export const getPublishedBidangs = async () => {
+//   const token = localStorage.getItem("token");
+
+//   const response = await fetch(`${API_URL}/bidangs`, {
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//     },
+//   });
+
+//   if (!response.ok) {
+//     throw new Error("Failed to fetch bidang data");
+//   }
+
+//   return await response.json();
+// };
 export const getPublishedBidangs = async () => {
   const token = localStorage.getItem("token");
 
-  const response = await fetch(`${API_URL}/bidangs`, {
+  const response = await fetch(`${API_URL}/bidangs/published`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -17,6 +32,7 @@ export const getPublishedBidangs = async () => {
 
   return await response.json();
 };
+
 
 // ambil kuota bidang untuk periode tertentu (protected)
 export const getMagangPeriode = async (startDate, endDate) => {
