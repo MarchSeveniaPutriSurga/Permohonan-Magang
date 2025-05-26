@@ -279,8 +279,8 @@ const PendaftaranMagang = () => {
               <div
                 key={bidang.id}
                 className={`cursor-pointer p-5 relative rounded-xl transition-all duration-300 border ${selectedBidangDescription?.id === bidang.id
-                    ? "border-blue-400 bg-white shadow-md"
-                    : "border-gray-200 hover:border-blue-200"
+                  ? "border-blue-400 bg-white shadow-md"
+                  : "border-gray-200 hover:border-blue-200"
                   }`}
                 onClick={() => handleBidangDescriptionSelect(bidang)}
               >
