@@ -10,6 +10,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   const location = useLocation();
+
+  const noFooterPaths = ["/login", "/register"];
+  const isDashboard = location.pathname.startsWith("/dashboard");
+  const hideFooter = noFooterPaths.includes(location.pathname) || isDashboard;
+
   return (
     <>
       <Routes>
@@ -34,7 +39,8 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/dashboard/*" element={<Dashboard />} />
       </Routes>
-      <Footer />
+
+      {!hideFooter && <Footer />}
     </>
   );
 }
