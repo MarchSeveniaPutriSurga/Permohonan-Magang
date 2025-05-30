@@ -22,11 +22,14 @@ function LoginPage() {
             const data = await response.json();
 
             if (data.token) {
-                // Simpan token ke local storage
                 localStorage.setItem('token', data.token);
+                localStorage.setItem('role', data.user.role);  // Simpan role juga
 
-                // Redirect ke halaman user setelah login berhasil
-                navigate('/pendaftaran-magang');
+                if (data.user.role === 'admin') {
+                    navigate('/dashboard');  // Redirect admin ke dashboard
+                } else {
+                    navigate('/pendaftaran-magang');  // Redirect user biasa ke halaman user
+                }
             } else {
                 alert('Login failed');
             }
@@ -51,7 +54,7 @@ function LoginPage() {
                             required
                         />
                     </div>
-                    
+
                     <div className="input-group">
                         <span className="input-icon">🔒</span>
                         <input
@@ -62,12 +65,12 @@ function LoginPage() {
                             required
                         />
                     </div>
-                    
+
                     <div className="login-options">
                         <div className="remember-me">
-                            <input 
-                                type="checkbox" 
-                                id="remember-me" 
+                            <input
+                                type="checkbox"
+                                id="remember-me"
                                 checked={rememberMe}
                                 onChange={(e) => setRememberMe(e.target.checked)}
                             />
@@ -77,7 +80,7 @@ function LoginPage() {
                             <a href="/forgot-password">Forgot Password?</a>
                         </div>
                     </div>
-                    
+
                     <button type="submit" className="login-btn">LOGIN</button>
                 </form>
                 <p className="auth-switch">Belum punya akun? <a href="/register">Daftar disini</a></p>

@@ -1,5 +1,6 @@
 const API_URL = "http://localhost:8080/api";
 const USER_URL = "http://localhost:8080/user";
+const ADMIN_URL = "http://localhost:8080/admin";
 
 // ambil semua bidang magang (protected, butuh token)
 // export const getPublishedBidangs = async () => {
@@ -118,7 +119,7 @@ export const getUserProfile = async () => {
 //admin area
 export const getDashboardStats = async () => {
   const token = localStorage.getItem("token");
-  const response = await fetch(`${API_URL}/dashboard/stats`, {
+  const response = await fetch(`${ADMIN_URL}/dashboard/stats`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) throw new Error("Gagal ambil statistik dashboard");
@@ -127,7 +128,7 @@ export const getDashboardStats = async () => {
 
 export const getPendaftaranChart = async () => {
   const token = localStorage.getItem("token");
-  const response = await fetch(`${API_URL}/pendaftaran/chart`, {
+  const response = await fetch(`${ADMIN_URL}/pendaftaran/chart`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) throw new Error("Gagal ambil data chart pendaftaran");
@@ -136,7 +137,7 @@ export const getPendaftaranChart = async () => {
 
 export const getDistribusiBidangMagang = async () => {
   const token = localStorage.getItem("token");
-  const response = await fetch(`${API_URL}/bidang/distribusi`, {
+  const response = await fetch(`${ADMIN_URL}/bidang/distribusi`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) throw new Error("Gagal ambil distribusi bidang magang");

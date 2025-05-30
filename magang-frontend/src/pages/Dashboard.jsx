@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button, Offcanvas } from "react-bootstrap";
 import { Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
 import {
@@ -15,6 +16,7 @@ import BidangMagang from "../components/BidangMagang";
 import DataPendaftaran from "../components/DataPendaftaran";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const [showSidebar, setShowSidebar] = useState(false);
 
@@ -40,8 +42,8 @@ const Dashboard = () => {
   ];
 
   const handleLogout = () => {
-    // Handle logout logic here
-    alert('Logout functionality here');
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   const SidebarContent = ({ isMobile = false }) => (
