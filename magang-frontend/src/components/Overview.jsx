@@ -43,8 +43,11 @@ const Overview = () => {
     const fetchData = async () => {
       try {
         const statsRes = await getDashboardStats();
+        console.log("statsRes:", statsRes);
         const chartRes = await getPendaftaranChart();
+        console.log("chartRes:", chartRes);
         const distribusiRes = await getDistribusiBidangMagang();
+        console.log("distribusiRes:", distribusiRes);
 
         setStats(statsRes);
         setPendaftaranData(chartRes);
@@ -178,7 +181,7 @@ const Overview = () => {
                   </div>
                   <div>
                     <Card.Title className="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                      Distribusi Bidang Magang
+                      Total Bidang Magang
                     </Card.Title>
                     <Card.Text className="h5 mb-0 font-weight-bold text-gray-800">
                       {stats.distribusiBidangMagang}

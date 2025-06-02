@@ -10,11 +10,12 @@ import (
 var jwtKey = []byte("kominfo")
 
 // GenerateToken membuat JWT token untuk user
-func GenerateToken(userID uint) (string, error) {
+func GenerateToken(userID uint, role string) (string, error) {
 	tokenExpiration := time.Now().Add(24 * time.Hour)
 
 	claims := jwt.MapClaims{
 		"user_id": userID,
+		"role":    role,
 		"exp":     tokenExpiration.Unix(),
 	}
 
@@ -29,7 +30,7 @@ func GenerateToken(userID uint) (string, error) {
 }
 
 // ValidateToken memeriksa apakah token valid
-func ValidateToken(tokenString string) (uint, error) {
+func ValidateToken(tokenString string) (uint, string, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
@@ -38,13 +39,14 @@ func ValidateToken(tokenString string) (uint, error) {
 	})
 
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		userID := uint(claims["user_id"].(float64))
-		return userID, nil
+		role := claims["role"].(string)
+		return userID, role, nil
 	}
 
-	return 0, errors.New("invalid token")
+	return 0, "", errors.New("invalid token")
 }

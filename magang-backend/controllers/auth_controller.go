@@ -34,10 +34,16 @@ func Register(c *gin.Context) {
 	}
 
 	// Create new user
+	role := req.Role
+	if role == "" {
+		role = "user"
+	}
+
 	user := models.User{
-		Name:     req.Name,    
+		Name:     req.Name,
 		Email:    req.Email,
 		Password: string(hashedPassword),
+		Role:     role,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
@@ -49,8 +55,9 @@ func Register(c *gin.Context) {
 		"message": "Registrasi berhasil",
 		"user": map[string]interface{}{
 			"id":    user.ID,
-			"name":  user.Name,  
+			"name":  user.Name,
 			"email": user.Email,
+			"role":  user.Role,
 		},
 	})
 }
@@ -78,7 +85,7 @@ func Login(c *gin.Context) {
 	}
 
 	// Generate JWT token
-	token, err := utils.GenerateToken(user.ID)
+	token, err := utils.GenerateToken(user.ID, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error generating token"})
 		return
@@ -88,8 +95,9 @@ func Login(c *gin.Context) {
 		"token": token,
 		"user": map[string]interface{}{
 			"id":    user.ID,
-			"name":  user.Name,  
+			"name":  user.Name,
 			"email": user.Email,
+			"role":  user.Role,
 		},
 	})
 }

@@ -6,9 +6,10 @@ import (
 
 type User struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
-	Name      string    `json:"name" gorm:"not null"` 
+	Name      string    `json:"name" gorm:"not null"`
 	Email     string    `json:"email" gorm:"uniqueIndex;not null"`
-	Password  string    `json:"-" gorm:"not null"` 
+	Password  string    `json:"-" gorm:"not null"`
+	Role      string    `json:"role" gorm:"default:'user'"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -19,9 +20,10 @@ type LoginRequest struct {
 }
 
 type RegisterRequest struct {
-	Name     string `json:"name" binding:"required"` 
+	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=6"`
+	Role     string `json:"role"`
 }
 
 type AuthResponse struct {

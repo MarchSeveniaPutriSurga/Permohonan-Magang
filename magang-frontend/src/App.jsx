@@ -10,14 +10,30 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   const location = useLocation();
+
+  const noFooterPaths = ["/login", "/register"];
+  const isDashboard = location.pathname.startsWith("/dashboard");
+  const hideFooter = noFooterPaths.includes(location.pathname) || isDashboard;
+
   return (
     <>
       <Routes>
         <Route path="/" element={<Beranda />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/dashboard/*"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/pendaftaran-magang"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['user']}>
               <PendaftaranMagang />
             </ProtectedRoute>
           }
@@ -25,16 +41,15 @@ function App() {
         <Route
           path="/status-magang"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['user']}>
               <StatusMagang />
             </ProtectedRoute>
           }
         />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/dashboard/*" element={<Dashboard />} />
+        {/* <Route path="/dashboard/*" element={<Dashboard />} /> */}
       </Routes>
-      <Footer />
+
+      {!hideFooter && <Footer />}
     </>
   );
 }

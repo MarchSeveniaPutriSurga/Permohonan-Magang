@@ -26,7 +26,7 @@ func SetupRoutes(router *gin.Engine) {
 		api := protected.Group("/api")
 		{
 			// Bidang magang
-			api.GET("/bidangs", controllers.GetAllBidangs)                // Menampilkan semua bidang magang (untuk admin)
+			api.GET("/bidangs", controllers.GetAllBidangs)                 // Menampilkan semua bidang magang (untuk admin)
 			api.GET("/bidangs/published", controllers.GetPublishedBidangs) // Menampilkan bidang yang dipublikasikan (untuk user)
 			api.POST("/bidangs", controllers.CreateBidang)
 			api.PUT("/bidangs/:id", controllers.UpdateBidang)
@@ -41,10 +41,15 @@ func SetupRoutes(router *gin.Engine) {
 			api.GET("/magang/kuota", controllers.GetUsedQuota)
 			api.GET("/magang/periode", controllers.MagangPeriode)
 
-			//admin
-			api.GET("/dashboard/stats", controllers.GetDashboardStats)
-			api.GET("/pendaftaran/chart", controllers.GetPendaftaranChart)
-			api.GET("/bidang/distribusi", controllers.GetBidangDistribusi)
 		}
+	}
+
+	admin := router.Group("/admin")
+	admin.Use(middleware.AuthMiddleware(), middleware.AdminOnlyMiddleware())
+	{
+		//admin
+		admin.GET("/dashboard/stats", controllers.GetDashboardStats)
+		admin.GET("/pendaftaran/chart", controllers.GetPendaftaranChart)
+		admin.GET("/bidang/distribusi", controllers.GetBidangDistribusi)
 	}
 }

@@ -16,23 +16,34 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
 			return
 		}
-		
-		// Check token format "Bearer {token}"
+
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
 			return
 		}
-		
-		// Validate token
-		userID, err := utils.ValidateToken(parts[1])
+
+		userID, role, err := utils.ValidateToken(parts[1])
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
 			return
 		}
-		
-		// Set userID in context
+
+		// Set ke context supaya bisa dipakai di route/handler
 		c.Set("userID", userID)
+		c.Set("role", role) // tambahkan ini
+
+		c.Next()
+	}
+}
+
+func AdminOnlyMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		roleValue, exists := c.Get("role")
+		if !exists || roleValue.(string) != "admin" {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Admin access only"})
+			return
+		}
 		c.Next()
 	}
 }
