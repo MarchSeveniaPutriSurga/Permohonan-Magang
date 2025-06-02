@@ -12,6 +12,8 @@ func SetupRoutes(router *gin.Engine) {
 	router.POST("/register", controllers.Register)
 	router.POST("/login", controllers.Login)
 
+	router.GET("/api/bidangs/published", controllers.GetPublishedBidangs)
+
 	// Protected routes (wajib token)
 	protected := router.Group("/")
 	protected.Use(middleware.AuthMiddleware())
@@ -26,8 +28,8 @@ func SetupRoutes(router *gin.Engine) {
 		api := protected.Group("/api")
 		{
 			// Bidang magang
-			api.GET("/bidangs", controllers.GetAllBidangs)                 // Menampilkan semua bidang magang (untuk admin)
-			api.GET("/bidangs/published", controllers.GetPublishedBidangs) // Menampilkan bidang yang dipublikasikan (untuk user)
+			api.GET("/bidangs", controllers.GetAllBidangs)
+			// api.GET("/bidangs/published", controllers.GetPublishedBidangs)
 			api.POST("/bidangs", controllers.CreateBidang)
 			api.PUT("/bidangs/:id", controllers.UpdateBidang)
 			api.DELETE("/bidangs/:id", controllers.DeleteBidang)

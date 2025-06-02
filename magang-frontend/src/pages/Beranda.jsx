@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SplitText from "../components/SplitText";
 import AnimatedContent from "../components/AnimatedContent";
+import { getPublishedBidangs } from "../utils/api";
 
 import logo from "../assets/images/logo.png";
 import HeroImage from "../assets/images/intern.png";
@@ -13,6 +14,20 @@ function Beranda() {
   const [scroll, setScroll] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+  const [bidangs, setBidangs] = useState([]);
+
+  useEffect(() => {
+    const fetchBidangs = async () => {
+      try {
+        const data = await getPublishedBidangs();
+        setBidangs(data);
+      } catch (error) {
+        console.error("Gagal memuat bidang magang:", error);
+      }
+    };
+
+    fetchBidangs();
+  }, []);
 
   useEffect(() => {
     const loggedInStatus = localStorage.getItem("token");
@@ -112,6 +127,35 @@ function Beranda() {
             </AnimatedContent>
           </div>
         </div>
+
+        {/* Section Bidang Magang */}
+        {/* Section Bidang Magang */}
+        <section className="mt-24">
+          <h2 className="text-3xl font-extrabold text-center text-gray-900 mb-12">
+            Pilihan <span className="text-blue-600">Bidang Magang</span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-4 md:px-0">
+            {bidangs.length === 0 ? (
+              <p className="col-span-full text-center text-gray-500">Belum ada bidang magang yang tersedia.</p>
+            ) : (
+              bidangs.map((bidang, index) => (
+                <div
+                  key={bidang.id}
+                  className="group bg-white border border-gray-200 rounded-3xl p-6 shadow-sm hover:shadow-lg hover:border-blue-500 transition-all duration-300 relative overflow-hidden"
+                >
+                  <div className="absolute -top-10 -right-10 bg-blue-100 text-blue-600 p-4 rounded-full group-hover:scale-110 transition-transform duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L16.5 12L9.75 7V17Z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-blue-800 mb-3">{bidang.nama}</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{bidang.deskripsi}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+
       </div>
     </div>
   );
