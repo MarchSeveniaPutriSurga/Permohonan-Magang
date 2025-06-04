@@ -129,7 +129,6 @@ function Beranda() {
         </div>
 
         {/* Section Bidang Magang */}
-        {/* Section Bidang Magang */}
         <section className="mt-24">
           <h2 className="text-3xl font-extrabold text-center text-gray-900 mb-12">
             Pilihan <span className="text-blue-600">Bidang Magang</span>

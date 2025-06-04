@@ -143,3 +143,168 @@ export const getDistribusiBidangMagang = async () => {
   if (!response.ok) throw new Error("Gagal ambil distribusi bidang magang");
   return await response.json();
 };
+
+export const createLogActivity = async (data) => {
+  const formData = new FormData();
+  formData.append("tanggal", data.tanggal);
+  formData.append("deskripsi", data.deskripsi);
+  if (data.dokumentasi) {
+    formData.append("dokumentasi", data.dokumentasi);
+  }
+
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/log-activities`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to create log activity");
+  }
+
+  return await response.json();
+};
+
+export const getUserLogActivities = async () => {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/log-activities`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch log activities");
+  }
+
+  return await response.json();
+};
+
+export const getLogActivityByID = async (id) => {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/log-activities/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch log activity detail");
+  }
+
+  return await response.json();
+};
+
+export const updateLogActivity = async (id, data) => {
+  const formData = new FormData();
+  formData.append("tanggal", data.tanggal);
+  formData.append("deskripsi", data.deskripsi);
+  if (data.dokumentasi) {
+    formData.append("dokumentasi", data.dokumentasi);
+  }
+
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/log-activities/${id}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to update log activity");
+  }
+
+  return await response.json();
+};
+
+export const deleteLogActivity = async (id) => {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/log-activities/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to delete log activity");
+  }
+
+  return await response.json();
+};
+
+
+//admin
+export const getAllLogActivities = async () => {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${ADMIN_URL}/log-activities`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch all log activities");
+  }
+
+  return await response.json();
+};
+
+export const validateLogActivity = async (id, status, qrCodeUrl = "") => {
+  const formData = new FormData();
+  formData.append("status", status);
+  if (qrCodeUrl) {
+    formData.append("qr_code_url", qrCodeUrl);
+  }
+
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${ADMIN_URL}/log-activities/${id}/validate`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to validate log activity");
+  }
+
+  return await response.json();
+};
+
+// Helper function untuk generate QR Code URL
+export const generateQRCodeUrl = (mentorSignatureUrl = "https://example.com/mentor-signature.png") => {
+  // Generate QR code yang berisi URL tanda tangan mentor
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mentorSignatureUrl)}`;
+};
+
+export const uploadMentorSignature = async (file) => {
+  const formData = new FormData();
+  formData.append("signature", file);
+
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${ADMIN_URL}/upload-signature`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Gagal upload tanda tangan");
+  }
+
+  return await response.json();
+};

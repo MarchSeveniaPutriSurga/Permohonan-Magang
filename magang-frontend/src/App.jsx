@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import LogActivity from "./pages/user/LogActivity";
 
 function App() {
   const location = useLocation();
@@ -43,6 +44,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <StatusMagang />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/log-activity"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <LogActivity />
             </ProtectedRoute>
           }
         />

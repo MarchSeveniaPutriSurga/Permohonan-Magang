@@ -11,9 +11,11 @@ import {
   FaTimes,
   FaUserCircle
 } from "react-icons/fa";
+import { GoLog } from "react-icons/go";
 import Overview from "../components/Overview";
 import BidangMagang from "../components/BidangMagang";
 import DataPendaftaran from "../components/DataPendaftaran";
+import AdminLogActivity from "../components/AdminLogActivity";
 import logo from "../assets/images/logo.png";
 import { getUserProfile } from "../utils/api";
 
@@ -56,6 +58,13 @@ const Dashboard = () => {
       icon:
         <FaUsers className="me-3" />,
       active: location.pathname.includes('data-pendaftaran')
+    },
+    {
+      path: "/dashboard/log-activity",
+      label: "Log Activity",
+      icon:
+        <GoLog className="me-3" />,
+      active: location.pathname.includes('log-activity')
     }
   ];
 
@@ -65,14 +74,14 @@ const Dashboard = () => {
   };
 
   const SidebarContent = ({ isMobile = false }) => (
-    <div className={`h-100 d-flex flex-column ${isMobile ? 'p-3' : 'p-4'}`} style={{ //
-      backgroundColor: '#fffff'
-      , boxShadow: isMobile ? 'none' : '4px 0 20px rgba(236, 72, 153, 0.1)'
+    <div className={`h-100 d-flex flex-column ${isMobile ? 'p-3' : 'p-4'}`} style={{
+      backgroundColor: '#ffffff',
+      boxShadow: isMobile ? 'none' : '4px 0 20px rgba(236, 72, 153, 0.1)'
     }}>
 
       {/* Header with close button for mobile */}
       {isMobile && (
-        <div className="d-flex  justify-content-end align-items-center mb-4">
+        <div className="d-flex justify-content-end align-items-center mb-4">
           <Button variant="link" className="text-gray-700 p-0" onClick={() => setShowSidebar(false)}
             style={{ fontSize: '18px' }}
           >
@@ -117,7 +126,6 @@ const Dashboard = () => {
         <div className="ms-3">
           <div className="text-black fw-bold" style={{ fontSize: '15px', lineHeight: '1.3' }}>{adminInfo.name || "Admin"}</div>
           <small className="text-black opacity-75" style={{ fontSize: '13px' }}>{adminInfo.email || "Administrator"}</small>
-          {/* <small className="text-black opacity-75" style={{ fontSize: '13px' }}>admin opd</small> */}
         </div>
       </div>
 
@@ -191,8 +199,8 @@ const Dashboard = () => {
       </Offcanvas>
       <Container fluid className="p-0">
         <Row className="g-0 min-vh-100">
-          {/* Desktop Sidebar */}
-          <Col lg={3} xl={2} className="d-none d-lg-block position-fixed h-100" style={{ zIndex: 1000 }}>
+          {/* Desktop Sidebar - Z-INDEX DIPERBAIKI */}
+          <Col lg={3} xl={2} className="d-none d-lg-block position-fixed h-100" style={{ zIndex: 100 }}>
             <SidebarContent />
           </Col>
           {/* Main Content Area */}
@@ -252,6 +260,7 @@ const Dashboard = () => {
                     <Route path="overview" element={<Overview />} />
                     <Route path="bidang-magang" element={<BidangMagang />} />
                     <Route path="data-pendaftaran" element={<DataPendaftaran />} />
+                    <Route path="log-activity" element={<AdminLogActivity />} />
                     <Route path="*" element={<Navigate to="overview" replace />} />
                   </Routes>
                 </div>

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"magang-backend/models"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -21,4 +22,8 @@ func ConnectDB() {
 
 	fmt.Println("Koneksi ke database berhasil!")
 
+	err = DB.AutoMigrate(&models.LogActivity{})
+	if err != nil {
+		log.Fatal("Gagal migrasi LogActivity:", err)
+	}
 }

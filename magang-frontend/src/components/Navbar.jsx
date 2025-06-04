@@ -61,6 +61,9 @@ const Navbar = () => {
             <Link to="/status-magang" className="text-lg font-semibold hover:text-neutral-300">
               Status Magang
             </Link>
+            <Link to="/log-activity" className="text-lg font-semibold hover:text-neutral-300">
+              Log Activity
+            </Link>
 
             {/* Dropdown for User Info & Logout */}
             <div className="relative">
@@ -131,6 +134,13 @@ const Navbar = () => {
             onClick={() => setSidebarOpen(false)}
           >
             Status Magang
+          </Link>
+          <Link
+            to="/log-activity"
+            className="text-lg font-medium text-gray-800 hover:text-neutral-600"
+            onClick={() => setSidebarOpen(false)}
+          >
+            Log Activity
           </Link>
           <button
             onClick={handleLogout}
