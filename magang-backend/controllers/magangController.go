@@ -296,3 +296,81 @@ func GetStatusMagangByUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": magangs})
 }
+
+func GetKalenderMagang(c *gin.Context) {
+	// Ambil parameter tanggal dari query
+	dateStr := c.Query("date")
+	if dateStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "400",
+			"message": "Parameter date diperlukan (format: YYYY-MM-DD)",
+		})
+		return
+	}
+
+	// Parse tanggal
+	targetDate, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "400", 
+			"message": "Format tanggal salah, gunakan YYYY-MM-DD",
+		})
+		return
+	}
+
+	// Query untuk mengambil bidang dengan peserta aktif pada tanggal tertentu
+	query := `
+		SELECT 
+			b.id,
+			b.nama,
+			b.deskripsi,
+			b.kuota,
+			b.publish,
+			COALESCE(m.jumlah_aktif, 0) AS jumlah_peserta_aktif
+		FROM 
+			bidang_magangs b
+		LEFT JOIN (
+			SELECT 
+				bidang_magang_id,
+				COUNT(*) AS jumlah_aktif
+			FROM 
+				magangs
+			WHERE 
+				status_magang = 'Aktif'
+				AND start_date <= ?
+				AND end_date >= ?
+			GROUP BY 
+				bidang_magang_id
+		) m ON b.id = m.bidang_magang_id
+		WHERE 
+			b.publish = '1'
+			AND COALESCE(m.jumlah_aktif, 0) > 0
+		ORDER BY b.nama
+	`
+
+	var bidangsWithPeserta []struct {
+		ID                  string `json:"id"`
+		Nama                string `json:"nama"`
+		Deskripsi           string `json:"deskripsi"`
+		Kuota               int    `json:"kuota"`
+		Publish             string `json:"publish"`
+		JumlahPesertaAktif  int    `json:"jumlah_peserta_aktif"`
+	}
+
+	err = config.DB.Raw(query, targetDate, targetDate).Scan(&bidangsWithPeserta).Error
+	if err != nil {
+		log.Println("Error DB:", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500",
+			"message": "Gagal mengambil data kalender magang",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "200",
+		"message": "Data kalender magang berhasil diambil",
+		"date":    dateStr,
+		"data":    bidangsWithPeserta,
+	})
+}

@@ -9,11 +9,13 @@ import {
   FaSignOutAlt,
   FaBars,
   FaTimes,
-  FaUserCircle
+  FaUserCircle,
+  FaCalendarAlt
 } from "react-icons/fa";
 import Overview from "../components/Overview";
 import BidangMagang from "../components/BidangMagang";
 import DataPendaftaran from "../components/DataPendaftaran";
+import KalenderMagang from "../components/KalenderMagang";
 import logo from "../assets/images/logo.png";
 import { getUserProfile } from "../utils/api";
 
@@ -39,22 +41,25 @@ const Dashboard = () => {
     {
       path: "/dashboard/overview",
       label: "Overview",
-      icon:
-        <FaHome className="me-3" />,
+      icon: <FaHome className="me-3" />,
       active: location.pathname === '/dashboard/overview'
     },
     {
       path: "/dashboard/bidang-magang",
       label: "Bidang Magang",
-      icon:
-        <FaBriefcase className="me-3" />,
+      icon: <FaBriefcase className="me-3" />,
       active: location.pathname.includes('bidang-magang')
+    },
+    {
+      path: "/dashboard/kalender",
+      label: "Kalender",
+      icon: <FaCalendarAlt className="me-3" />,
+      active: location.pathname.includes('kalender')
     },
     {
       path: "/dashboard/data-pendaftaran",
       label: "Data Pendaftaran",
-      icon:
-        <FaUsers className="me-3" />,
+      icon: <FaUsers className="me-3" />,
       active: location.pathname.includes('data-pendaftaran')
     }
   ];
@@ -65,14 +70,14 @@ const Dashboard = () => {
   };
 
   const SidebarContent = ({ isMobile = false }) => (
-    <div className={`h-100 d-flex flex-column ${isMobile ? 'p-3' : 'p-4'}`} style={{ //
-      backgroundColor: '#fffff'
-      , boxShadow: isMobile ? 'none' : '4px 0 20px rgba(236, 72, 153, 0.1)'
+    <div className={`h-100 d-flex flex-column ${isMobile ? 'p-3' : 'p-4'}`} style={{
+      backgroundColor: '#ffffff',
+      boxShadow: isMobile ? 'none' : '4px 0 20px rgba(236, 72, 153, 0.1)'
     }}>
 
       {/* Header with close button for mobile */}
       {isMobile && (
-        <div className="d-flex  justify-content-end align-items-center mb-4">
+        <div className="d-flex justify-content-end align-items-center mb-4">
           <Button variant="link" className="text-gray-700 p-0" onClick={() => setShowSidebar(false)}
             style={{ fontSize: '18px' }}
           >
@@ -117,7 +122,6 @@ const Dashboard = () => {
         <div className="ms-3">
           <div className="text-black fw-bold" style={{ fontSize: '15px', lineHeight: '1.3' }}>{adminInfo.name || "Admin"}</div>
           <small className="text-black opacity-75" style={{ fontSize: '13px' }}>{adminInfo.email || "Administrator"}</small>
-          {/* <small className="text-black opacity-75" style={{ fontSize: '13px' }}>admin opd</small> */}
         </div>
       </div>
 
@@ -251,6 +255,7 @@ const Dashboard = () => {
                   <Routes>
                     <Route path="overview" element={<Overview />} />
                     <Route path="bidang-magang" element={<BidangMagang />} />
+                    <Route path="kalender" element={<KalenderMagang />} />
                     <Route path="data-pendaftaran" element={<DataPendaftaran />} />
                     <Route path="*" element={<Navigate to="overview" replace />} />
                   </Routes>
@@ -291,97 +296,81 @@ const Dashboard = () => {
       </Container>
 
       <style jsx>
-        {
-          ` .hover-bg-white-20:hover {
-        background-color: rgba(255, 255, 255, 0.2) !important;
-      }
+        {`
+          .hover-bg-white-20:hover {
+            background-color: rgba(255, 255, 255, 0.2) !important;
+          }
 
-      .transition-all {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      }
+          .transition-all {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
 
-<<<<<<< HEAD
-        {/* Main Content */}
-        <Col xs={9} className="p-4">
-          <Routes>
-            <Route path="overview" element={<Overview />} />
-            <Route path="bidang-magang" element={<BidangMagang />} />
-            <Route path="data-pendaftaran" element={<DataPendaftaran />} />
-            <Route path="*" element={<Navigate to="overview" replace />} />
-          </Routes>
-        </Col>
-      </Row>
-    </Container>
-=======
-      @media (max-width: 991.98px) {
-        .offcanvas {
-          width: 320px !important;
-        }
-      }
+          @media (max-width: 991.98px) {
+            .offcanvas {
+              width: 320px !important;
+            }
+          }
 
-      /* Custom scrollbar */
-      .sidebar-scroll::-webkit-scrollbar {
-        width: 6px;
-      }
+          /* Custom scrollbar */
+          .sidebar-scroll::-webkit-scrollbar {
+            width: 6px;
+          }
 
-      .sidebar-scroll::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
-      }
+          .sidebar-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+          }
 
-      .sidebar-scroll::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 3px;
-      }
+          .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+          }
 
-      .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.5);
-      }
+          .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+          }
 
-      /* Smooth animations */
-      .btn:hover {
-        transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.2);
-      }
+          /* Smooth animations */
+          .btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(236, 72, 153, 0.2);
+          }
 
-      .shadow-lg {
-        box-shadow: 0 10px 40px rgba(236, 72, 153, 0.1) !important;
-      }
+          .shadow-lg {
+            box-shadow: 0 10px 40px rgba(236, 72, 153, 0.1) !important;
+          }
 
-      /* Modern card styles */
-      .rounded-4 {
-        border-radius: 1.25rem !important;
-      }
+          /* Modern card styles */
+          .rounded-4 {
+            border-radius: 1.25rem !important;
+          }
 
-      /* Glassmorphism effect */
-      .glass-effect {
-        background: rgba(255, 255, 255, 0.25);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-      }
+          /* Glassmorphism effect */
+          .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+          }
 
-      /* Subtle entrance animations */
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
+          /* Subtle entrance animations */
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
 
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
 
-      .bg-white {
-        animation: fadeInUp 0.6s ease-out;
-      }
-
-      `
-        }
+          .bg-white {
+            animation: fadeInUp 0.6s ease-out;
+          }
+        `}
       </style>
     </>
->>>>>>> origin/puput
   );
 };
 

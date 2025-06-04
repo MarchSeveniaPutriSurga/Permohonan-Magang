@@ -41,6 +41,10 @@ func SetupRoutes(router *gin.Engine) {
 			api.GET("/magang/kuota", controllers.GetUsedQuota)
 			api.GET("/magang/periode", controllers.MagangPeriode)
 
+			// Kalender
+			api.GET("/kalender/magang", controllers.GetKalenderMagang)
+			api.GET("/kalender/magang/:bidang_id/peserta", controllers.GetDetailPesertaMagang)
+
 		}
 	}
 
